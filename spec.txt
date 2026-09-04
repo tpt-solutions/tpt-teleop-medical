@@ -1,0 +1,176 @@
+Design Document: tpt-teleop-medical (Surgical Robotics & Hospital Automation)
+Version: 1.0.0 (v1 Monolithic Release)
+Date: August 26, 2026
+Status: Approved for Development
+Sister Repositories: tpt-teleop, tpt-teleop-fleet, tpt-t-agri, tpt-teleop-marine
+(Note: Repository retains the full tpt-teleop-medical name. All internal crates use the simplified tpt-t-medical- prefix.)
+1. Executive Summary
+tpt-teleop-medical is the hyper-optimized, zero-bloat, safety-critical, Rust-based middleware workspace designed for the highest-stakes robotics environment on Earth: the human body.
+While tpt-teleop-fleet orchestrates warehouse floors and tpt-teleop-marine operates in the deep ocean, tpt-teleop-medical operates where a single millimeter of error, a single millisecond of latency, or a single unlogged command can mean the difference between life and death—and legal liability. It powers remote telesurgery, hospital logistics, automated pharmacy dispensing, UV sterilization robots, and surgical training simulators.
+The fundamental constraints are uncompromising: deterministic <1ms end-to-end latency for telesurgery, sub-millimeter precision, sub-Newton haptic fidelity, triple-modular redundancy on every safety-critical path, complete cryptographic audit trails for FDA 21 CFR Part 11 compliance, and zero tolerance for heap allocation in the control loop. This spec is built around those constraints.
+2. Licensing & Dependency Policy
+Project License: MIT OR Apache-2.0.
+Dependency Policy: Strictly enforces the MIT/BSD/ISC chain. cargo-deny rejects any Apache-only dependencies. Dual-licensed crates are resolved strictly under MIT.
+Regulatory Note: While the software is MIT-licensed, deployments targeting FDA Class II/III medical devices must undergo full IEC 62304 (software lifecycle), ISO 14971 (risk management), and ISO 13485 (quality management) certification. tpt-teleop-medical is architected from day one to make this certification tractable: every safety-critical path is deterministic, auditable, and free of undefined behavior.
+3. Workspace Architecture (The Crates)
+The repository is structured as a Cargo Workspace. Every crate uses the simplified tpt-t-medical- prefix.
+Core & Surgical Control
+tpt-t-medical-core: The central event loop, surgical state machine (Idle → Registered → Active → Paused → Emergency), and lock-free message bus.
+tpt-t-medical-surgical: Tele-surgery execution. Handles master-slave kinematic mapping, motion scaling, tremor filtering, and virtual fixtures (geodesic active constraints that prevent the surgeon from cutting critical anatomy).
+tpt-t-medical-haptic: High-fidelity haptic rendering at 1kHz. Models tissue stiffness, damping, and tool-tissue interaction forces. Runs on a dedicated real-time thread with strict deadline guarantees.
+tpt-t-medical-vision: Surgical vision pipeline. Handles stereoscopic endoscope processing, 3D reconstruction, depth estimation, and overlay of pre-op CT/MRI onto the live video feed (augmented reality guidance).
+Hospital Logistics & Automation
+tpt-t-medical-logistics: Hospital delivery robots. Navigates corridors, elevators, and doors. Handles linens, meals, medications, lab samples, and biohazard transport with strict infection-control protocols.
+tpt-t-medical-pharmacy: Automated dispensing cabinets and robotic pharmacy. Handles unit-dose packaging, barcode verification, narcotic chain-of-custody, and refrigerated storage monitoring.
+tpt-t-medical-sterilize: UV-C disinfection robots and automated sterilization. Maps rooms via LiDAR, calculates UV dosage based on surface reflectivity, and validates complete coverage.
+Safety, Compliance & Audit
+tpt-t-medical-safety: Triple-Modular Redundancy (TMR) for all safety-critical control paths. Independent watchdogs, force/torque limiters, workspace envelope enforcement, and emergency stop hierarchies.
+tpt-t-medical-compliance: FDA 21 CFR Part 11 audit trails. Every command, state transition, and user action is cryptographically signed (Ed25519), timestamped (PTP-synchronized), and written to an append-only, tamper-evident log.
+tpt-t-medical-hipaa: HIPAA-compliant data handling. PHI (Protected Health Information) is encrypted at rest (AES-256-GCM) and in transit. Patient data is never included in training datasets or logs without explicit consent tokens.
+Edge & Perception
+tpt-t-medical-edge: The real-time control loop for surgical arms. Runs at 1kHz on a dedicated RT core. Translates high-level Cartesian commands into joint-space torques with gravity compensation and friction modeling.
+tpt-t-medical-track: Tool and anatomy tracking. Fuses optical tracking (NDI Polaris-style), electromagnetic tracking, and intraoperative imaging to maintain sub-millimeter registration between the patient's anatomy and the pre-op scan.
+4. Extreme Performance Tactics (Medical-Specific)
+Medical robotics demands a level of determinism and safety that no other domain requires.
+4.1. Triple-Modular Redundancy (TMR) for Safety-Critical Paths
+A single software bug cannot be allowed to cause injury. Every safety-critical computation (e.g., "is the tool inside the workspace envelope?") is computed three times in parallel on independent cores.
+The Solution: tpt-t-medical-safety runs three independent copies of the safety monitor on three isolated CPU cores. Each core reads raw sensor data independently. A voter compares the three results. If any disagree, the system enters a safe state (immediate stop) within 100 microseconds.
+Zero-Allocation: All three copies operate on pre-allocated, static memory. No heap, no dynamic dispatch, no possibility of allocation failure during surgery.
+4.2. 1kHz Haptic Rendering with Zero Jitter
+The human hand can detect force discontinuities as small as 0.01N at frequencies up to 1kHz. Any jitter in the haptic loop breaks the surgeon's immersion and can cause tissue damage.
+The Solution: tpt-t-medical-haptic runs on a dedicated, pinned CPU core with SCHED_FIFO real-time priority. It uses a custom impedance control model that renders tissue stiffness, damping, and inertia. The loop executes in <50 microseconds, with a hard deadline of 1ms. If the deadline is missed, the haptic output is held constant (not zeroed), preventing jarring force drops.
+Lock-Free: The haptic thread reads tool position from a lock-free SPSC ring buffer written by the vision/tracking thread. No mutexes, no priority inversion.
+4.3. Virtual Fixtures (Geodesic Active Constraints)
+Surgeons make errors. Virtual fixtures are software-defined "guard rails" that prevent the surgeon from moving the tool into critical anatomy (e.g., a nerve or artery).
+The Solution: tpt-t-medical-surgical loads a pre-op segmentation of critical structures. It computes a signed distance field (SDF) in real-time. As the tool approaches a forbidden zone, the system applies a progressively stronger force feedback (via tpt-t-medical-haptic) and, if the surgeon persists, overrides the master-slave mapping to prevent entry.
+Deterministic: The SDF lookup is a constant-time trilinear interpolation. The entire virtual fixture computation runs in <20 microseconds.
+4.4. Cryptographic Audit Trails (FDA 21 CFR Part 11)
+Every action in a surgical system must be auditable. A single missing log entry can invalidate a device's regulatory approval.
+The Solution: tpt-t-medical-compliance implements an append-only, hash-chained log (similar to a blockchain, but without the overhead). Every event (surgeon input, state transition, alarm) is:
+Serialized via rkyv (zero-copy).
+Signed with Ed25519 using a hardware-backed key (TPM or secure enclave).
+Hashed with SHA-256, chained to the previous entry.
+Written to a write-ahead log (WAL) on NVMe via O_DIRECT (bypassing OS page cache).
+Tamper-Evident: If any entry is modified, the hash chain breaks, and the entire log is invalidated.
+4.5. Tremor Filtering and Motion Scaling
+Surgeons' hands tremor at 8-12Hz. Surgical instruments must be steady.
+The Solution: tpt-t-medical-surgical applies a recursive band-stop filter (notch filter) at 10Hz to the master controller input. It also applies motion scaling: a 10cm hand movement at the master becomes a 1cm movement at the slave. Both filters run in <5 microseconds using SIMD-optimized difference equations.
+4.6. Sub-Millisecond Telesurgery Latency
+For remote surgery (surgeon in New York, patient in rural hospital), end-to-end latency must be <10ms to prevent motion sickness and loss of dexterity.
+The Solution: tpt-teleop (the sister repo) provides the low-latency transport. tpt-t-medical-surgical adds predictive display: the local UI shows a predicted tool position based on the surgeon's hand velocity, while the remote robot executes the actual command. If the prediction is wrong, the display smoothly corrects. This masks network jitter up to 50ms.
+5. The "Medical Robotics" Feature Matrix (v1)
+5.1. Telesurgery
+Master-Slave Kinematics: Supports 7-DOF surgical arms (like the da Vinci) with wrist articulation.
+Motion Scaling: Adjustable from 1:1 (microsurgery) to 10:1 (gross dissection).
+Tremor Filtering: Automatic 10Hz notch filter, adjustable.
+Virtual Fixtures: Load pre-op segmentations to create no-fly zones.
+Multi-Site Teleoperation: Surgeon in one city, patient in another, with <10ms latency.
+Co-Surgery: Two surgeons operating simultaneously on the same patient with assignable tool authority.
+5.2. Hospital Logistics
+Infection Control: Robots are assigned to "clean" or "dirty" zones. A robot that enters an isolation room must undergo UV sterilization before re-entering clean zones.
+Elevator & Door Integration: Robots request elevator access via MQTT. The system ensures only one robot enters an elevator at a time, and prioritizes emergency transports.
+Narcotic Chain-of-Custody: Every transfer of controlled substances is logged with biometric authentication (fingerprint or badge), timestamp, and cryptographic signature.
+5.3. Automated Pharmacy
+Unit-Dose Packaging: Robots pick, verify (barcode + weight), and package individual doses.
+Refrigeration Monitoring: Continuous temperature logging with alerting if out of range.
+Expiration Tracking: First-expired-first-out (FEFO) dispensing logic.
+5.4. Sterilization
+Room Mapping: LiDAR-based 3D mapping of the room before disinfection.
+UV Dosage Calculation: Computes the required UV-C exposure time based on surface distance, reflectivity, and shadowing.
+Coverage Validation: After the cycle, the robot re-scans the room and verifies that all surfaces received the required dosage.
+5.5. Safety & Redundancy
+Workspace Envelope: The robot cannot move outside a pre-defined safe volume.
+Force/Torque Limiting: If the tool encounters unexpected resistance (e.g., hitting bone), the robot stops immediately.
+Emergency Stop Hierarchies: Multiple independent E-stop paths (foot pedal, hand switch, voice command, automatic via safety monitor).
+Power Loss Survival: If power is lost, the robot holds position (brakes engaged) or retracts to a safe pose, depending on the procedure phase.
+6. The Complete "Remote Telesurgery" Data Flow
+Here is the lifecycle of a telesurgery procedure, demonstrating the zero-allocation, deterministic flow:
+Pre-Op Planning: The surgeon loads the patient's CT scan. tpt-t-medical-vision segments critical structures (arteries, nerves). The surgeon defines virtual fixtures (no-fly zones).
+Patient Registration: The patient is positioned. tpt-t-medical-track registers the patient's anatomy to the pre-op scan using fiducial markers. Registration error is <0.5mm.
+System Check: tpt-t-medical-safety runs a full TMR self-test. All three safety monitors agree. The system transitions to Active.
+Incision: The surgeon makes the first incision. tpt-t-medical-haptic renders the tissue stiffness. The surgeon feels the resistance of skin, fat, and fascia.
+Virtual Fixture Engagement: The tool approaches a critical artery. tpt-t-medical-surgical computes the SDF. The haptic device applies a 2N repulsive force. The surgeon feels the "wall" and adjusts.
+Audit Trail: Every joystick movement, every force reading, every state transition is logged by tpt-t-medical-compliance. The hash chain grows.
+Network Jitter: The network latency spikes to 30ms. tpt-teleop's predictive display masks the jitter. The surgeon sees smooth motion. The robot executes the actual commands.
+Emergency: The tool encounters unexpected bleeding. The surgeon hits the foot pedal E-stop. tpt-t-medical-safety triggers all three redundant stop paths. The robot halts in <10ms.
+Post-Op: The procedure ends. The audit log is sealed. The hash chain is complete. The log is exported to the hospital's secure archive for regulatory review.
+7. Dependency Matrix (The "No-Bloat" Stack)
+Functionality
+Standard Ecosystem (Banned/Avoided)
+tpt-t-medical Custom / Lightweight Choice
+License
+Real-Time Control
+tokio, heavy robotics frameworks
+Custom 1kHz loop, SCHED_FIFO, pinned cores
+MIT
+Haptic Rendering
+haptix, heavy physics engines
+Custom impedance control, zero-alloc
+MIT
+Signal Processing
+rustfft (allocates)
+Custom SIMD notch filter, recursive
+MIT
+Audit Trail
+log, tracing (allocate)
+Custom hash-chained WAL, O_DIRECT
+MIT
+Cryptography
+openssl, rustls
+ring (Ed25519, SHA-256, AES-256-GCM)
+ISC / MIT
+Serialization
+serde, bincode
+rkyv (Zero-copy)
+MIT
+IPC / Telemetry
+tokio::sync, crossbeam
+Custom tpt-teleop-ring (Lock-free SPSC/MPSC)
+MIT
+Vision Processing
+OpenCV, image (heavy)
+Custom SIMD stereoscopic pipeline
+MIT
+Tracking Fusion
+nalgebra, heavy SLAM
+Custom EKF, portable-simd
+MIT
+Safety Monitoring
+Heavy PLC frameworks
+Custom TMR voter, deterministic FSM
+MIT
+8. Developer Experience & Simulation
+Testing surgical robots requires cadavers, phantoms, or live patients—all expensive and ethically constrained. tpt-teleop-medical includes a comprehensive simulation stack.
+tpt-t-medical-sim: A headless simulator that models:
+7-DOF arm kinematics with gravity, friction, and backlash
+Tissue deformation (mass-spring or FEM-based)
+Haptic force rendering
+Network latency and jitter injection
+Fault injection (sensor failure, motor stall, network drop)
+Visualizer: A lightweight egui (MIT) binary that renders:
+3D arm trajectory with workspace envelope
+Virtual fixture boundaries (no-fly zones)
+Haptic force vectors
+Audit trail timeline
+TMR agreement/disagreement indicators
+The simulator runs at 10x real-time, allowing developers to test 10-hour surgical procedures in 1 hour of wall-clock time.
+9. Conclusion
+tpt-teleop-medical v1 brings the tpt ecosystem's uncompromising philosophy to the highest-stakes robotics environment on Earth.
+By implementing triple-modular redundancy for safety-critical paths, 1kHz haptic rendering with zero jitter, virtual fixtures to prevent surgical errors, cryptographic audit trails for FDA compliance, and sub-millisecond telesurgery latency, tpt-teleop-medical proves that you don't need heavy, proprietary, or Apache-encumbered middleware to build life-saving surgical robots.
+It is a battle-ready, commercially unencumbered, regulatory-compliant operating system for the future of telesurgery, hospital automation, and medical robotics—capable of running on a $50,000 surgical arm or a $5,000 disinfection robot, all while maintaining the strict MIT-only dependency chain and zero-bloat performance that defines the tpt ecosystem.
+Every command is logged. Every safety check is redundant. Every millisecond is deterministic. And every line of code is MIT-licensed.
+
+tpt-teleop-medical → tpt-teleop Integration
+Adapter Crate: tpt-t-medical-teleop (new crate in the medical repo)
+Integration Flow:
+A surgeon in New York is performing remote surgery on a patient in a rural hospital.
+tpt-teleop provides the ultra-low-latency (<10ms) video and control link.
+The surgeon's hand movements (captured via a master controller or VR gloves) are translated into ControlCommand structs.
+tpt-t-medical-teleop receives the ControlCommand and translates it into 7-DOF surgical arm joint torques, with tremor filtering and motion scaling applied.
+The surgical arm's force/torque sensors provide haptic feedback to the surgeon's master controller.
+tpt-t-medical-safety monitors the tool position and overrides the surgeon's commands if the tool approaches a virtual fixture (no-fly zone).
+Domain-Specific Adaptation:
+Haptic Fidelity: The adapter ensures sub-millisecond haptic feedback loop, rendering tissue stiffness and tool-tissue interaction forces.
+Motion Scaling: The adapter applies configurable motion scaling (e.g., 10:1 for microsurgery).
+Tremor Filtering: The adapter applies a 10Hz notch filter to the surgeon's input to eliminate hand tremor.
+Virtual Fixtures: The adapter enforces geodesic active constraints, preventing the surgeon from cutting critical anatomy.
