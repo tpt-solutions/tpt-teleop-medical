@@ -10,8 +10,12 @@
 //! (BSD-3-Clause). Hardware-backed keys (TPM, secure enclave) are not
 //! implemented yet.
 //!
-//! Not yet implemented: the on-disk WAL, `O_DIRECT` writes, and rkyv
-//! serialization of payloads. Payloads are opaque bytes for now.
+//! The [journal] module persists each entry through a [Storage] before it
+//! counts as committed. [`wal::FileWal`] is the file backend. It uses buffered
+//! writes with a sync after each append, and it refuses to open a torn tail.
+//!
+//! Not yet implemented: `O_DIRECT` writes, and rkyv serialization of payloads.
+//! Payloads are opaque bytes for now.
 //!
 //! The log allocates. Appends belong on a logging thread, not on the real-time
 //! control path.
@@ -19,6 +23,10 @@
 #![forbid(unsafe_code)]
 
 pub mod ed25519;
+pub mod journal;
+pub mod wal;
+
+mod codec;
 
 use core::fmt;
 
@@ -55,6 +63,23 @@ pub trait Signer {
 pub trait Verifier {
     /// Returns `true` if `signature` is a valid signature of `hash`.
     fn verify(&self, hash: &Hash, signature: &[u8]) -> bool;
+}
+
+/// Durable storage for encoded entries.
+pub trait Storage {
+    /// Appends one record. Returns only once the record is durable.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the record cannot be written or made durable.
+    fn append(&mut self, record: &[u8]) -> std::io::Result<()>;
+
+    /// Returns every stored record, oldest first.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the storage cannot be read or is malformed.
+    fn records(&mut self) -> std::io::Result<Vec<Vec<u8>>>;
 }
 
 /// Computes an entry digest.
@@ -141,19 +166,69 @@ impl Log {
         self.entries.last().map_or(GENESIS, |e| e.hash)
     }
 
-    /// Appends `payload` and returns its sequence number.
-    pub fn append<S: Signer + ?Sized>(&mut self, signer: &S, payload: Vec<u8>) -> u64 {
+    /// Builds the entry that would follow the current head, without adding it.
+    ///
+    /// Persist the entry first, then pass it to [`Log::push`]. That way the
+    /// in-memory log never holds an entry that is not on disk.
+    #[must_use]
+    pub fn seal<S: Signer + ?Sized>(&self, signer: &S, payload: Vec<u8>) -> Entry {
         let seq = u64::try_from(self.entries.len()).unwrap_or(u64::MAX);
         let prev = self.head();
         let hash = digest(seq, &prev, &payload);
         let signature = signer.sign(&hash);
-        self.entries.push(Entry {
+        Entry {
             seq,
             prev,
             payload,
             hash,
             signature,
-        });
+        }
+    }
+
+    /// Adds a sealed entry to the end of the log.
+    ///
+    /// The entry's position, link and digest are checked. Its signature is not,
+    /// because the caller produced it.
+    ///
+    /// # Errors
+    ///
+    /// Returns the failed check if the entry does not follow the head.
+    pub fn push(&mut self, entry: Entry) -> Result<u64, ChainError> {
+        let index = self.entries.len();
+        let fail = |kind| ChainError { index, kind };
+        if entry.seq != u64::try_from(index).unwrap_or(u64::MAX) {
+            return Err(fail(ChainErrorKind::Sequence));
+        }
+        if entry.prev != self.head() {
+            return Err(fail(ChainErrorKind::Link));
+        }
+        if entry.hash != digest(entry.seq, &entry.prev, &entry.payload) {
+            return Err(fail(ChainErrorKind::Digest));
+        }
+        let seq = entry.seq;
+        self.entries.push(entry);
+        Ok(seq)
+    }
+
+    /// Creates a log from entries that must all verify, such as entries read
+    /// back from disk.
+    ///
+    /// # Errors
+    ///
+    /// Returns the first entry that fails a check.
+    pub fn from_entries<V: Verifier + ?Sized>(
+        entries: Vec<Entry>,
+        verifier: &V,
+    ) -> Result<Self, ChainError> {
+        verify_entries(&entries, verifier)?;
+        Ok(Self { entries })
+    }
+
+    /// Appends `payload` and returns its sequence number.
+    pub fn append<S: Signer + ?Sized>(&mut self, signer: &S, payload: Vec<u8>) -> u64 {
+        let entry = self.seal(signer, payload);
+        let seq = entry.seq;
+        self.entries.push(entry);
         seq
     }
 
