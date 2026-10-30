@@ -531,6 +531,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpt-t-medical-bridge-dicom"
+version = "1.0.0"
+
+[[package]]
 name = "tpt-t-medical-bridge-hl7fhir"
 version = "1.0.0"
 

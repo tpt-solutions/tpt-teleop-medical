@@ -23,7 +23,7 @@ gets a section here once it has an implementation.
 | Foundations | `tpt-t-medical-ring` | Wait-free SPSC ring buffer (MPSC deferred) | SPSC core done, loom-verified |
 | Telesurgery | `tpt-t-medical-teleop` | Adapter for the `tpt-teleop-domain-bridge` DTI | Not started |
 | Bridges | `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT ingestion and output | ADT parser done; FHIR awaiting JSON dependency approval |
-| | `tpt-t-medical-bridge-dicom` | DICOM query/retrieve and SR export | Not started |
+| | `tpt-t-medical-bridge-dicom` | DICOM query/retrieve and SR export | Metadata parser for uncompressed files done; network services and SR export pending |
 | Tooling | `tpt-t-medical-sim` | Headless simulator with fault injection | Not started |
 
 ## Data flow: telesurgery
