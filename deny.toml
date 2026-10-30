@@ -29,8 +29,11 @@ confidence-threshold = 0.93
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+allow-wildcard-paths = true
 highlight = "all"
-# Cryptography must come from `ring` (spec.txt §7), never OpenSSL.
+# Cryptography must not come from OpenSSL (spec.txt §7). The spec names `ring`,
+# which is Apache-2.0 AND ISC and is rejected by the allow list above; see
+# docs/ARCHITECTURE.md, open decisions.
 deny = [
     { crate = "openssl" },
     { crate = "openssl-sys" },

@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-compliance`: append-only hash-chained audit log with SHA-256 digests over sequence, previous hash and length-prefixed payload. Verification reports the first broken entry and the check that failed. Signing is behind a trait; no signing backend yet.
 - `tpt-t-medical-core`: surgical state machine (Idle, Registered, Active, Paused, Emergency). Emergency is latched and clears only to Idle. Pure logic with no allocation. The EventLoop drains one SPSC lane per producer on each tick. Lane 0 is the emergency lane and is drained first.
 - CI: loom model-check job for `tpt-t-medical-ring`.
 - `tpt-t-medical-ring`: wait-free SPSC ring buffer (SpscRing), adapted from the

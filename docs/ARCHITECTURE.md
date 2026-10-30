@@ -16,7 +16,7 @@ gets a section here once it has an implementation.
 | | `tpt-t-medical-pharmacy` | Unit-dose packaging, FEFO dispensing, cold-chain logging | Not started |
 | | `tpt-t-medical-sterilize` | LiDAR room mapping, UV-C dosage, coverage validation | Not started |
 | Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Not started |
-| | `tpt-t-medical-compliance` | Hash-chained, Ed25519-signed audit WAL | Not started |
+| | `tpt-t-medical-compliance` | Hash-chained audit log; signing behind a trait | Chain and verification done; no signer or WAL yet |
 | | `tpt-t-medical-hipaa` | PHI encryption, consent-token gating | Not started |
 | Edge & perception | `tpt-t-medical-edge` | 1 kHz real-time arm control loop | Not started |
 | | `tpt-t-medical-track` | Optical, EM and imaging tracking fusion, EKF | Not started |
@@ -60,7 +60,7 @@ flowchart LR
 
 ## Open decisions
 
-- Ring buffer: reuse the `tpt-teleop` pattern or write `tpt-t-medical-ring`
-  (todo.md, Phase 1).
+- Ring buffer: decided. `tpt-t-medical-ring` is a copy of the SPSC core from `tpt-t-ring`, not a path dependency on the sister repo. MPSC is deferred.
 - Unicode-3.0 is in the `cargo deny` allow list, but spec.txt §2 does not list
   it (see [deny.toml](../deny.toml)).
+- Signing library: spec.txt §7 names `ring` for Ed25519. `ring` is licensed Apache-2.0 AND ISC, which the allow list rejects, so the spec's MIT-only claim does not hold for it. Options: (a) an exception for `ring` in `deny.toml`, or (b) `ed25519-dalek` (BSD-3-Clause) with `sha2`, which needs no exception. This blocks the signer in `tpt-t-medical-compliance`.

@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-compliance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Append-only, hash-chained audit log for surgical events (spec.txt §4.4)"
+keywords = ["audit", "hash-chain", "compliance"]
+categories = ["cryptography", "data-structures"]
+
+[dependencies]
+sha2 = "0.10"
+
+[lints]
+workspace = true

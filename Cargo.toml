@@ -1,6 +1,10 @@
 [workspace]
 resolver = "3"
-members = ["crates/tpt-t-medical-core", "crates/tpt-t-medical-ring"]
+members = [
+    "crates/tpt-t-medical-compliance",
+    "crates/tpt-t-medical-core",
+    "crates/tpt-t-medical-ring",
+]
 
 [workspace.package]
 version = "1.0.0"

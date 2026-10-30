@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 description = "Wait-free SPSC ring buffer for the haptic and tracking handoff (spec.txt §4.2)"
 keywords = ["spsc", "ring-buffer", "lock-free", "wait-free"]
 categories = ["concurrency", "data-structures"]
