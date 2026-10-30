@@ -11,14 +11,16 @@
 //! the bridge does not need them to place a patient.
 //!
 //! Input comes from the network, so every size is bounded and nothing panics on
-//! malformed input. The limits are the `MAX_*` constants below. The parser
-//! depends on nothing outside `std`.
+//! malformed input. The limits are the `MAX_*` constants below. The HL7 parser
+//! depends on nothing outside `std`. The FHIR parser ([`fhir`]) uses
+//! `serde_json`.
 //!
-//! Not yet implemented: FHIR. It needs a JSON dependency, which is awaiting
-//! approval. Escape sequences (`\F\`, `\S\`, and so on) are not decoded. An
+//! Escape sequences in HL7 (`\F\`, `\S\`, and so on) are not decoded. An
 //! identifier that contains one is refused.
 
 #![forbid(unsafe_code)]
+
+pub mod fhir;
 
 use core::fmt;
 

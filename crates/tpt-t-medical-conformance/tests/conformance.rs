@@ -285,3 +285,31 @@ fn journal_detects_a_tampered_admission_record_after_restart() {
     }
     assert!(Journal::open(store, &s.verifier()).is_err());
 }
+
+#[test]
+fn medication_order_is_accepted_only_for_an_admitted_patient() {
+    let mut census = Census::default();
+    let admit = tpt_t_medical_bridge_hl7fhir::parse(&hl7("A01", "MRN-8", Some("WARD4^1")))
+        .expect("valid ADT");
+    census.apply(&admit).expect("admitted");
+
+    let order = br#"{"resourceType":"MedicationRequest","id":"rx-1","status":"active",
+        "subject":{"reference":"Patient/MRN-8"},
+        "medicationCodeableConcept":{"text":"heparin"}}"#;
+    let parsed =
+        tpt_t_medical_bridge_hl7fhir::fhir::parse_medication_request(order).expect("valid order");
+    assert!(
+        census.is_admitted(&parsed.patient_id),
+        "order for an admitted patient"
+    );
+
+    let stranger = br#"{"resourceType":"MedicationRequest","id":"rx-2","status":"active",
+        "subject":{"reference":"Patient/MRN-9"},
+        "medicationCodeableConcept":{"text":"heparin"}}"#;
+    let parsed = tpt_t_medical_bridge_hl7fhir::fhir::parse_medication_request(stranger)
+        .expect("valid order");
+    assert!(
+        !census.is_admitted(&parsed.patient_id),
+        "order for an unadmitted patient"
+    );
+}

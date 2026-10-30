@@ -6,9 +6,12 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 publish = false
-description = "HL7v2 ADT ingestion: bounded, dependency-free parser for admit, transfer and discharge (spec.txt §5.2, Phase 6)"
+description = "HL7v2 ADT and FHIR MedicationRequest ingestion: bounded parsers (Phase 6) (spec.txt §5.2, Phase 6)"
 keywords = ["hl7", "adt", "interoperability"]
 categories = ["parser-implementations"]
+
+[dependencies]
+serde_json = "1"
 
 [lints]
 workspace = true

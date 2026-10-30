@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-bridge-hl7fhir` FHIR: parses R4 `MedicationRequest` JSON (order ID, status, patient reference, drug, dispense quantity). Uses `serde_json` 1.x (MIT OR Apache-2.0), approved for this use. Limits: 256 KiB resource, 256-byte strings, a positive finite quantity, and a known status. `to_value` writes the order back. Debug redacts the patient. Other resource types are refused.
 - `tpt-t-medical-sim`: headless simulator core for a seven-joint arm at a fixed 1 kHz step. Each joint has gravity, viscous and Coulomb friction, and a backlash operator on its reported position. Faults can be injected and cleared: sensor failure, motor stall, and network drop. Non-finite commands are refused. Runs are deterministic. Kinematics, tissue, haptics and the visualizer are not yet modelled.
 - CI: a Miri job runs the ring crate's single-threaded unit tests under nightly miri.
 - `tpt-t-medical-conformance`: cross-bridge tests, with no product code. They check that an admit precedes a transfer or discharge, that a CT scan matches only an admitted patient, that every ADT event is journalled and the journal verifies after restart, that malformed input from either bridge never panics, and that Debug output hides identifiers. The admission rules are a reference implementation for the tests.

@@ -22,7 +22,7 @@ gets a section here once it has an implementation.
 | | `tpt-t-medical-track` | Optical, EM and imaging tracking fusion, EKF | Not started |
 | Foundations | `tpt-t-medical-ring` | Wait-free SPSC ring buffer (MPSC deferred) | SPSC core done, loom-verified |
 | Telesurgery | `tpt-t-medical-teleop` | Adapter for the `tpt-teleop-domain-bridge` DTI | Not started |
-| Bridges | `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT ingestion and output | ADT parser done; FHIR awaiting JSON dependency approval |
+| Bridges | `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT and FHIR MedicationRequest ingestion | Both parsers done; other FHIR resources not implemented |
 | | `tpt-t-medical-bridge-dicom` | DICOM query/retrieve and SR export | Metadata parser for uncompressed files done; network services and SR export pending |
 | Tooling | `tpt-t-medical-sim` | Headless simulator with fault injection | Joint dynamics and fault injection done; kinematics, tissue and visualizer pending |
 
