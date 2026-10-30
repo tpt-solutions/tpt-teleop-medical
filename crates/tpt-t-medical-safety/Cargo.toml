@@ -1,0 +1,14 @@
+[package]
+name = "tpt-t-medical-safety"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Safety monitor: TMR voting, workspace envelope, force limits, watchdog, emergency stop (spec.txt §4.1, §5.5)"
+keywords = ["safety", "tmr", "medical"]
+categories = ["science::robotics", "embedded"]
+
+[lints]
+workspace = true

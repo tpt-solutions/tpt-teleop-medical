@@ -15,7 +15,7 @@ gets a section here once it has an implementation.
 | Hospital logistics | `tpt-t-medical-logistics` | Delivery robots, infection-control zones, elevator arbitration | Not started |
 | | `tpt-t-medical-pharmacy` | Unit-dose packaging, FEFO dispensing, cold-chain logging | Not started |
 | | `tpt-t-medical-sterilize` | LiDAR room mapping, UV-C dosage, coverage validation | Not started |
-| Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Not started |
+| Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Pure logic done; RT timing and core-isolated copies pending |
 | | `tpt-t-medical-compliance` | Hash-chained audit log, Ed25519 signatures | Chain, Ed25519 and file WAL done; O_DIRECT and hardware keys pending |
 | | `tpt-t-medical-hipaa` | PHI encryption, consent-token gating | Not started |
 | Edge & perception | `tpt-t-medical-edge` | 1 kHz real-time arm control loop | Not started |

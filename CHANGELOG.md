@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-safety`: safety monitor. Workspace envelope, force limit (NaN refused), watchdog (gaps and clock regressions), latched emergency stop from four sources, and a TMR voter that requires all three copies to agree. Stops latch until an explicit reset. Timing targets are not verified.
 - `tpt-t-medical-compliance`: append-only hash-chained audit log with SHA-256 digests over sequence, previous hash and length-prefixed payload. Verification reports the first broken entry and the check that failed. Ed25519 signatures come from `ed25519-dalek` (BSD-3-Clause) with `verify_strict`. The `ring` crate is not used because it is Apache-2.0 AND ISC.
 - `tpt-t-medical-compliance`: journal that persists each entry before it is committed. File-backed WAL with a length-prefixed framing and sync after each append. Opening refuses a torn tail rather than repairing it, and a bad record or broken chain also stops the open.
 - `tpt-t-medical-core`: surgical state machine (Idle, Registered, Active, Paused, Emergency). Emergency is latched and clears only to Idle. Pure logic with no allocation. The EventLoop drains one SPSC lane per producer on each tick. Lane 0 is the emergency lane and is drained first.
