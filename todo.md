@@ -56,7 +56,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 5 — Hospital Logistics & Automation
 
 - [ ] `tpt-t-medical-logistics` *(zone rules and elevator arbitration done; path planning and MQTT pending)* — corridor/elevator/door navigation; clean/dirty zone assignment with mandatory UV-sterilize-before-re-entry; MQTT elevator request/single-occupancy arbitration with emergency-transport priority; linens/meals/medication/lab-sample/biohazard transport profiles with infection-control protocols
-- [ ] `tpt-t-medical-pharmacy` *(FEFO and cold-chain done; packaging, barcode/weight and custody pending)* — unit-dose pick/verify (barcode + weight)/package; refrigerated-storage continuous temperature logging with out-of-range alerting; FEFO (first-expired-first-out) dispensing; narcotic chain-of-custody log entries (biometric/badge auth, timestamp, crypto signature) written through `tpt-t-medical-compliance`
+- [ ] `tpt-t-medical-pharmacy` *(FEFO, cold-chain and custody ledger done; packaging and barcode/weight pending)* — unit-dose pick/verify (barcode + weight)/package; refrigerated-storage continuous temperature logging with out-of-range alerting; FEFO (first-expired-first-out) dispensing; narcotic chain-of-custody log entries (biometric/badge auth, timestamp, crypto signature) written through `tpt-t-medical-compliance`
 - [ ] `tpt-t-medical-sterilize` *(dose planning and coverage check done; LiDAR mapping pending)* — LiDAR room mapping, UV-C dosage calculation from surface distance/reflectivity/shadowing, post-cycle re-scan coverage validation
 
 ## Phase 6 — Hospital-IT Interoperability Bridges

@@ -5,14 +5,16 @@
 //! * [`ColdChain`] tracks refrigerated storage and raises an alert once a
 //!   temperature excursion lasts longer than a grace period.
 //!
-//! Narcotic chain-of-custody (spec.txt §5.2) is not implemented here. Its
-//! records belong in `tpt-t-medical-compliance`, and the wiring is a later
-//! step.
+//! * [`custody::CustodyLedger`] records narcotic chain-of-custody (spec.txt
+//!   §5.2). Each change of holder is signed and journalled through
+//!   `tpt-t-medical-compliance`, and the ledger is rebuilt by replaying it.
 
 #![forbid(unsafe_code)]
 
 pub mod coldchain;
+pub mod custody;
 pub mod inventory;
 
 pub use coldchain::{Alert, ColdChain};
+pub use custody::{Authentication, CustodyError, CustodyLedger, Holding, Method};
 pub use inventory::{DispenseError, Inventory, Lot, Pick};

@@ -574,6 +574,9 @@ dependencies = [
 [[package]]
 name = "tpt-t-medical-pharmacy"
 version = "1.0.0"
+dependencies = [
+ "tpt-t-medical-compliance",
+]
 
 [[package]]
 name = "tpt-t-medical-ring"

@@ -13,7 +13,7 @@ gets a section here once it has an implementation.
 | Edge & perception | `tpt-t-medical-haptic` | 1 kHz impedance rendering, hold-last-value on missed deadline | Contact model and hold logic done; pinned-core timing pending |
 | | `tpt-t-medical-vision` | Stereoscopic pipeline, 3D reconstruction, AR overlay | Not started |
 | Hospital logistics | `tpt-t-medical-logistics` | Delivery robots, infection-control zones, elevator arbitration | Zone rules and elevator arbitration done; path planning and MQTT pending |
-| Hospital logistics | `tpt-t-medical-pharmacy` | Unit-dose packaging, FEFO dispensing, cold-chain logging | FEFO dispensing and cold-chain alerting done; packaging, barcode/weight and custody pending |
+| Hospital logistics | `tpt-t-medical-pharmacy` | Unit-dose packaging, FEFO dispensing, cold-chain logging | FEFO, cold-chain alerting and custody ledger done; packaging and barcode/weight pending |
 | Hospital logistics | `tpt-t-medical-sterilize` | LiDAR room mapping, UV-C dosage, coverage validation | Dose planning and coverage validation done; LiDAR mapping pending |
 | Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Pure logic done; RT timing and core-isolated copies pending |
 | | `tpt-t-medical-compliance` | Hash-chained audit log, Ed25519 signatures | Chain, Ed25519 and file WAL done; O_DIRECT and hardware keys pending |

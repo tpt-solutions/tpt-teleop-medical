@@ -10,5 +10,8 @@ description = "Pharmacy dispensing: FEFO stock selection and refrigerated cold-c
 keywords = ["pharmacy", "fefo", "cold-chain"]
 categories = ["science::robotics"]
 
+[dependencies]
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+
 [lints]
 workspace = true

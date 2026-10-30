@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-pharmacy` narcotic custody: `CustodyLedger` journals every receipt and transfer through the compliance journal. Only the current holder can transfer, and the authenticated person must be that holder. The ledger is rebuilt by replaying the journal, and a validly signed record that breaks the custody rules stops the open.
 - Phase 5 logic: `tpt-t-medical-pharmacy` (FEFO dispensing, all-or-nothing, expired lots never issued; cold-chain excursion alerts past a grace period, with non-finite readings treated as out of range), `tpt-t-medical-sterilize` (UV-C dose planning from geometry, post-cycle coverage check; reflection not credited), and `tpt-t-medical-logistics` (clean/dirty/isolation rules that require a complete UV cycle before re-entering a clean zone; single-occupancy elevator with emergency priority).
 - `tpt-t-medical-haptic`: 1 kHz tick loop with an impedance contact model against a plane. It reads the newest sample from the lock-free ring, and holds the last force on a missed deadline, a missing or stale sample, or an invalid sample. Force is never zeroed.
 - `tpt-t-medical-surgical`: motion scaling (1:1 to 10:1), RBJ band-stop tremor notch at 10 Hz with DF-II-T state, trilinear SDF lookup that returns unknown outside the grid, and a linear progressive fixture force. NaN distance gives maximum force.
