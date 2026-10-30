@@ -257,7 +257,7 @@ mod tests {
 
         assert_eq!(out.status, Status::Rendered);
         assert!((out.force[2] - 2.0).abs() < 1e-9, "{:?}", out.force);
-        assert!(q.is_empty(), "the ring is drained each tick");
+        assert_eq!(q.len(), 0, "the ring is drained each tick");
     }
 
     #[test]

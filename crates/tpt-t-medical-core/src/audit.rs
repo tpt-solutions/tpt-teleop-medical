@@ -271,7 +271,7 @@ mod tests {
         aud.apply_decision(Decision::Run).expect("no-op");
 
         assert_eq!(aud.state(), State::Idle);
-        assert!(payloads(&aud).is_empty());
+        assert_eq!(payloads(&aud).len(), 0);
     }
 
     #[test]

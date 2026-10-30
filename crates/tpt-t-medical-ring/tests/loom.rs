@@ -37,7 +37,7 @@ fn capacity_one_forces_slot_reuse_in_order() {
             }
         }
         producer.join().expect("producer panicked");
-        assert!(ring.is_empty());
+        assert_eq!(ring.len(), 0);
     });
 }
 

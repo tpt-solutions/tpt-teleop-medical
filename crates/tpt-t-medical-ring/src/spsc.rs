@@ -239,7 +239,7 @@ mod tests {
                 next_pop += 1;
             }
         }
-        assert!(ring.is_empty());
+        assert_eq!(ring.len(), 0);
         assert_eq!(ring.pop(), None);
     }
 
@@ -247,7 +247,7 @@ mod tests {
     fn full_and_empty_semantics() {
         let ring: SpscRing<u32> = SpscRing::with_capacity(4);
         assert_eq!(ring.capacity(), 4);
-        assert!(ring.is_empty());
+        assert_eq!(ring.len(), 0);
         for i in 0..4 {
             assert!(ring.push(i).is_ok());
         }
