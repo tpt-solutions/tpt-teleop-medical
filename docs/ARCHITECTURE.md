@@ -10,7 +10,7 @@ gets a section here once it has an implementation.
 |---|---|---|---|
 | Core & surgical control | `tpt-t-medical-core` | Event loop, surgical state machine, lock-free message bus | State machine, tick loop, per-producer lanes and audited wrapper done |
 | Core & surgical control | `tpt-t-medical-surgical` | Motion scaling, tremor notch, SDF lookup, fixture force | Signal and geometry done; kinematics and RT timing pending |
-| | `tpt-t-medical-haptic` | 1 kHz haptic rendering, impedance control | Not started |
+| Edge & perception | `tpt-t-medical-haptic` | 1 kHz impedance rendering, hold-last-value on missed deadline | Contact model and hold logic done; pinned-core timing pending |
 | | `tpt-t-medical-vision` | Stereoscopic pipeline, 3D reconstruction, AR overlay | Not started |
 | Hospital logistics | `tpt-t-medical-logistics` | Delivery robots, infection-control zones, elevator arbitration | Not started |
 | | `tpt-t-medical-pharmacy` | Unit-dose packaging, FEFO dispensing, cold-chain logging | Not started |

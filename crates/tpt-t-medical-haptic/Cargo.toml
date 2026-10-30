@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-haptic"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "1 kHz haptic rendering: impedance contact model, hold-last-value on missed deadline (spec.txt §4.2)"
+keywords = ["haptic", "impedance", "real-time"]
+categories = ["science::robotics"]
+
+[dependencies]
+tpt-t-medical-ring = { path = "../tpt-t-medical-ring" }
+
+[lints]
+workspace = true

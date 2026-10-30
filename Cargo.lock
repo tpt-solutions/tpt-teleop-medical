@@ -548,6 +548,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpt-t-medical-haptic"
+version = "1.0.0"
+dependencies = [
+ "tpt-t-medical-ring",
+]
+
+[[package]]
 name = "tpt-t-medical-hipaa"
 version = "1.0.0"
 dependencies = [

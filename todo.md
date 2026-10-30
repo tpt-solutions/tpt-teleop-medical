@@ -41,7 +41,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 3 — Surgical Control & Haptics
 
 - [ ] `tpt-t-medical-edge` — 1kHz real-time control loop on dedicated RT core, Cartesian → joint-space torque translation, gravity compensation, friction modeling
-- [ ] `tpt-t-medical-haptic` — 1kHz haptic rendering, pinned core + SCHED_FIFO, custom impedance control (stiffness/damping/tool-tissue forces), <50us loop / 1ms hard deadline, hold-last-value on missed deadline, lock-free SPSC ring buffer input
+- [ ] `tpt-t-medical-haptic` *(contact model, hold-last-value and newest-sample read done; pinned core and SCHED_FIFO pending)* — 1kHz haptic rendering, pinned core + SCHED_FIFO, custom impedance control (stiffness/damping/tool-tissue forces), <50us loop / 1ms hard deadline, hold-last-value on missed deadline, lock-free SPSC ring buffer input
 - [ ] `tpt-t-medical-track` — tool/anatomy tracking fusion (optical NDI-Polaris-style + electromagnetic + intra-op imaging), custom EKF (portable-simd), sub-millimeter registration to pre-op scan (<0.5mm)
 - [ ] `tpt-t-medical-vision` — stereoscopic endoscope pipeline, 3D reconstruction, depth estimation, pre-op CT/MRI overlay onto live video (AR guidance), critical-structure segmentation ingestion for virtual fixtures
 - [ ] `tpt-t-medical-surgical` *(scaling, notch, SDF lookup and fixture force done; kinematics and RT timing pending)* — master-slave kinematic mapping for 7-DOF arms, motion scaling (1:1–10:1), 10Hz SIMD recursive notch (tremor) filter (<5us), virtual fixtures: real-time SDF (constant-time trilinear interpolation, <20us) with progressive force feedback + master-slave override on persistent intrusion, co-surgery tool-authority assignment

@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-haptic`: 1 kHz tick loop with an impedance contact model against a plane. It reads the newest sample from the lock-free ring, and holds the last force on a missed deadline, a missing or stale sample, or an invalid sample. Force is never zeroed.
 - `tpt-t-medical-surgical`: motion scaling (1:1 to 10:1), RBJ band-stop tremor notch at 10 Hz with DF-II-T state, trilinear SDF lookup that returns unknown outside the grid, and a linear progressive fixture force. NaN distance gives maximum force.
 - `tpt-t-medical-hipaa`: PHI encryption with AES-256-GCM. Each record gets a random 96-bit nonce and binds the patient identifier as associated data. Consent tokens are signed, purpose-limited and expiring. `release` checks consent before decrypting. `Phi` redacts its Debug output.
 - `AuditedLoop` in `tpt-t-medical-core`: every transition is journalled before it is applied. Safety stops are journalled as a reason record followed by the transition, and they take effect even if the journal write fails. Event and state codes are fixed for the audit format.
