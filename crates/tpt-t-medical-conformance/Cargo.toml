@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-conformance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Cross-bridge conformance tests: HL7 ADT, DICOM metadata, and the audit journal, exercised together (Phase 6)"
+
+[dev-dependencies]
+tpt-t-medical-bridge-dicom = { path = "../tpt-t-medical-bridge-dicom" }
+tpt-t-medical-bridge-hl7fhir = { path = "../tpt-t-medical-bridge-hl7fhir" }
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+
+[lints]
+workspace = true

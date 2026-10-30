@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/tpt-t-medical-bridge-dicom",
+    "crates/tpt-t-medical-conformance",
     "crates/tpt-t-medical-bridge-hl7fhir",
     "crates/tpt-t-medical-compliance",
     "crates/tpt-t-medical-haptic",

@@ -63,7 +63,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 - [ ] `tpt-t-medical-bridge-hl7fhir` *(HL7v2 ADT parser done; FHIR pending JSON dependency approval)* — HL7v2 ADT feed ingestion (patient admission/transfer/discharge) and FHIR resources (orders, medication requests) in/out, feeding `tpt-t-medical-logistics`/`tpt-t-medical-pharmacy` and posting audit-relevant events to `tpt-t-medical-compliance`
 - [ ] `tpt-t-medical-bridge-dicom` *(metadata parser for uncompressed files done; network query/retrieve and SR export pending)* — DICOM query/retrieve for pre-op CT/MRI ingestion into `tpt-t-medical-vision`'s segmentation pipeline; DICOM SR export path for structured post-op reports
-- [ ] Cross-bridge conformance/integration test suite (HL7/FHIR + DICOM fixtures against both bridge crates)
+- [x] Cross-bridge conformance/integration test suite (HL7/FHIR + DICOM fixtures against both bridge crates)
 
 ## Phase 6.5 — AI & Fleet Dispatch
 

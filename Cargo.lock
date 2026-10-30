@@ -547,6 +547,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpt-t-medical-conformance"
+version = "1.0.0"
+dependencies = [
+ "tpt-t-medical-bridge-dicom",
+ "tpt-t-medical-bridge-hl7fhir",
+ "tpt-t-medical-compliance",
+]
+
+[[package]]
 name = "tpt-t-medical-core"
 version = "1.0.0"
 dependencies = [
