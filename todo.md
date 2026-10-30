@@ -30,7 +30,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 1 — Foundation Primitives
 
 - [x] Decide lock-free SPSC/MPSC ring-buffer sourcing: reuse/vendor `tpt-teleop`'s ring pattern vs. new `tpt-t-medical-ring` (needed by the haptic↔vision/tracking handoff in spec.txt §4.2)
-- [ ] `tpt-t-medical-core` — central event loop, surgical state machine (Idle → Registered → Active → Paused → Emergency), lock-free message bus
+- [ ] `tpt-t-medical-core` — central event loop, surgical state machine (Idle → Registered → Active → Paused → Emergency), lock-free message bus *(state machine done; event loop and bus pending)*
 
 ## Phase 2 — Safety & Compliance Backbone
 

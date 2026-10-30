@@ -8,6 +8,8 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-core`: surgical state machine (Idle, Registered, Active, Paused, Emergency). Emergency is latched and clears only to Idle. Pure logic with no allocation. The event loop and message bus are not yet implemented.
+- CI: loom model-check job for `tpt-t-medical-ring`.
 - `tpt-t-medical-ring`: wait-free SPSC ring buffer (SpscRing), adapted from the
   tpt-teleop `tpt-t-ring` crate. Unused modules (shared memory, pointer rings,
   byte casting, layout) are left out. Unsafe code is confined to one module.

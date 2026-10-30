@@ -32,3 +32,20 @@ jobs:
 
       - name: Test workspace
         run: cargo test --workspace --all-targets
+
+  loom:
+    name: Loom model checks (tpt-t-medical-ring)
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: --cfg loom
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run loom interleaving tests
+        run: cargo test -p tpt-t-medical-ring --test loom --release
