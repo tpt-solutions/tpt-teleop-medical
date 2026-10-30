@@ -78,7 +78,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 ## Phase 7 — Developer Experience & Simulation
 
-- [ ] `tpt-t-medical-sim` — headless simulator: 7-DOF arm kinematics (gravity/friction/backlash), tissue deformation (mass-spring or FEM), haptic force rendering, network latency/jitter injection, fault injection (sensor failure, motor stall, network drop), 10x real-time execution
+- [ ] `tpt-t-medical-sim` *(joint dynamics and fault injection done; kinematics, tissue and visualizer pending)* — headless simulator: 7-DOF arm kinematics (gravity/friction/backlash), tissue deformation (mass-spring or FEM), haptic force rendering, network latency/jitter injection, fault injection (sensor failure, motor stall, network drop), 10x real-time execution
 - [ ] Visualizer binary (egui, MIT) — 3D arm trajectory + workspace envelope, virtual-fixture no-fly-zone boundaries, haptic force vectors, audit-trail timeline, TMR agreement/disagreement indicators
 
 ## Phase 8 — Regulatory & Compliance Documentation Scaffolding

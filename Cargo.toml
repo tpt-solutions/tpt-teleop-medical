@@ -13,6 +13,7 @@ members = [
     "crates/tpt-t-medical-hipaa",
     "crates/tpt-t-medical-ring",
     "crates/tpt-t-medical-safety",
+    "crates/tpt-t-medical-sim",
     "crates/tpt-t-medical-surgical",
 ]
 

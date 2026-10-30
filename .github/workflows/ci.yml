@@ -49,3 +49,24 @@ jobs:
 
       - name: Run loom interleaving tests
         run: cargo test -p tpt-t-medical-ring --test loom --release
+
+  miri:
+    name: Miri (unsafe code in tpt-t-medical-ring)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nightly Miri
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: miri
+
+      - uses: Swatinem/rust-cache@v2
+
+      # The threaded stress test runs 200k items, which is too slow under Miri.
+      # Its single-threaded tests still cover the unsafe slot accesses.
+      - name: Run ring unit tests under Miri
+        run: |
+          cargo +nightly miri setup
+          cargo +nightly miri test -p tpt-t-medical-ring --lib -- --skip cross_thread
