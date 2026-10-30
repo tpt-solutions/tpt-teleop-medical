@@ -11,7 +11,9 @@ keywords = ["surgical", "state-machine", "safety"]
 categories = ["science::robotics", "embedded"]
 
 [dependencies]
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
 tpt-t-medical-ring = { path = "../tpt-t-medical-ring" }
+tpt-t-medical-safety = { path = "../tpt-t-medical-safety" }
 
 [lints]
 workspace = true

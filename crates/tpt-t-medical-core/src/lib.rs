@@ -11,11 +11,17 @@
 //!
 //! The state machine is pure logic: no allocation, no I/O, no clock. Only the
 //! lanes allocate, and only at construction.
+//!
+//! [`audit::AuditedLoop`] couples the loop to the audit journal. Every event is
+//! written to the journal before it takes effect, and a safety stop is
+//! journalled and applied.
 
 #![forbid(unsafe_code)]
 
+pub mod audit;
 pub mod event_loop;
 pub mod state;
 
+pub use audit::AuditedLoop;
 pub use event_loop::{EMERGENCY_LANE, EventLoop, TickReport};
 pub use state::{Event, InvalidTransition, Machine, State, transition};

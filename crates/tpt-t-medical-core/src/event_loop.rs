@@ -12,6 +12,7 @@
 //! lane. Restricting which producer may clear an emergency is a separate
 //! decision and is not made here.
 
+use core::convert::Infallible;
 use std::sync::Arc;
 
 use tpt_t_medical_ring::SpscRing;
@@ -70,6 +71,27 @@ impl<const LANES: usize> EventLoop<LANES> {
     /// `budget` events between them, in lane order.
     #[must_use]
     pub fn tick(&mut self, budget: usize) -> TickReport {
+        match self.tick_with(budget, |_, _| Ok::<(), Infallible>(())) {
+            Ok(report) => report,
+            Err(never) => match never {},
+        }
+    }
+
+    /// Applies pending events, calling `record` with each event and the state
+    /// it arrives in, before the event is applied.
+    ///
+    /// If `record` fails, the event is not applied. It has already been taken
+    /// from its lane, so it is lost, and the error is returned. The caller must
+    /// then treat the system as unsafe.
+    ///
+    /// # Errors
+    ///
+    /// Returns the first error from `record`.
+    pub fn tick_with<E>(
+        &mut self,
+        budget: usize,
+        mut record: impl FnMut(Event, State) -> Result<(), E>,
+    ) -> Result<TickReport, E> {
         let mut report = TickReport::default();
 
         let emergency = &self.lanes[EMERGENCY_LANE];
@@ -77,7 +99,7 @@ impl<const LANES: usize> EventLoop<LANES> {
             let Some(event) = emergency.pop() else {
                 break;
             };
-            apply(&mut self.machine, event, &mut report);
+            apply(&mut self.machine, event, &mut report, &mut record)?;
         }
 
         let mut remaining = budget;
@@ -87,22 +109,37 @@ impl<const LANES: usize> EventLoop<LANES> {
                 let Some(event) = lane.pop() else {
                     break;
                 };
-                apply(&mut self.machine, event, &mut report);
+                apply(&mut self.machine, event, &mut report, &mut record)?;
                 taken += 1;
             }
             remaining -= taken;
         }
 
-        report
+        Ok(report)
+    }
+
+    /// Applies `event` immediately, ahead of any queued events. Used by the
+    /// safety path. The caller must record the event first.
+    ///
+    /// Returns `true` if the machine accepted it.
+    pub fn apply_now(&mut self, event: Event) -> bool {
+        self.machine.handle(event).is_ok()
     }
 }
 
-fn apply(machine: &mut Machine, event: Event, report: &mut TickReport) {
+fn apply<E>(
+    machine: &mut Machine,
+    event: Event,
+    report: &mut TickReport,
+    record: &mut impl FnMut(Event, State) -> Result<(), E>,
+) -> Result<(), E> {
+    record(event, machine.state())?;
     if machine.handle(event).is_ok() {
         report.applied += 1;
     } else {
         report.rejected += 1;
     }
+    Ok(())
 }
 
 #[cfg(test)]

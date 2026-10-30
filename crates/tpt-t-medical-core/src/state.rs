@@ -57,6 +57,38 @@ pub enum Event {
     ClearEmergency,
 }
 
+impl State {
+    /// One-byte code used in audit records. The values are part of the audit
+    /// format, so do not renumber them.
+    #[must_use]
+    pub const fn code(self) -> u8 {
+        match self {
+            Self::Idle => 0,
+            Self::Registered => 1,
+            Self::Active => 2,
+            Self::Paused => 3,
+            Self::Emergency => 4,
+        }
+    }
+}
+
+impl Event {
+    /// One-byte code used in audit records. The values are part of the audit
+    /// format, so do not renumber them.
+    #[must_use]
+    pub const fn code(self) -> u8 {
+        match self {
+            Self::Register => 1,
+            Self::Deregister => 2,
+            Self::Activate => 3,
+            Self::Pause => 4,
+            Self::Resume => 5,
+            Self::EmergencyStop => 6,
+            Self::ClearEmergency => 7,
+        }
+    }
+}
+
 /// Returned when an event is not allowed in the current state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvalidTransition {

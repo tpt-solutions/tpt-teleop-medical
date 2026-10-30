@@ -413,7 +413,9 @@ dependencies = [
 name = "tpt-t-medical-core"
 version = "1.0.0"
 dependencies = [
+ "tpt-t-medical-compliance",
  "tpt-t-medical-ring",
+ "tpt-t-medical-safety",
 ]
 
 [[package]]
