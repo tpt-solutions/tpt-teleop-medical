@@ -61,7 +61,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 ## Phase 6 — Hospital-IT Interoperability Bridges
 
-- [ ] `tpt-t-medical-bridge-hl7fhir` *(HL7v2 ADT and FHIR MedicationRequest parsers done; wiring into logistics, pharmacy and compliance pending)* — HL7v2 ADT feed ingestion (patient admission/transfer/discharge) and FHIR resources (orders, medication requests) in/out, feeding `tpt-t-medical-logistics`/`tpt-t-medical-pharmacy` and posting audit-relevant events to `tpt-t-medical-compliance`
+- [ ] `tpt-t-medical-bridge-hl7fhir` *(HL7v2 ADT and FHIR MedicationRequest parsers done; audit posting to compliance done; feeds into logistics and pharmacy pending)* — HL7v2 ADT feed ingestion (patient admission/transfer/discharge) and FHIR resources (orders, medication requests) in/out, feeding `tpt-t-medical-logistics`/`tpt-t-medical-pharmacy` and posting audit-relevant events to `tpt-t-medical-compliance`
 - [ ] `tpt-t-medical-bridge-dicom` *(metadata parser for uncompressed files done; network query/retrieve and SR export pending)* — DICOM query/retrieve for pre-op CT/MRI ingestion into `tpt-t-medical-vision`'s segmentation pipeline; DICOM SR export path for structured post-op reports
 - [x] Cross-bridge conformance/integration test suite (HL7/FHIR + DICOM fixtures against both bridge crates)
 
@@ -93,9 +93,9 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 9 — Integration, Hardening & Release
 
 - [ ] End-to-end telesurgery data-flow validation against spec.txt §6 scenario (pre-op planning → patient registration → TMR system check → incision haptics → virtual-fixture engagement → audit trail growth → network-jitter masking → foot-pedal E-stop <10ms halt → post-op log seal/export)
-- [ ] Full `cargo-deny` audit pass across entire dependency tree (MIT-chain enforcement, spec.txt §7)
+- [x] Full `cargo-deny` audit pass across entire dependency tree (MIT-chain enforcement, spec.txt §7) *(all four checks pass on the current tree; re-run on every dependency change)*
 - [ ] Determinism/performance validation: <1ms control-loop latency, 1kHz haptic <50us execution / 1ms deadline, TMR voter <100us disagreement response, SDF <20us, notch+scaling filters <5us, E-stop <10ms
 - [ ] Fuzz/property testing for custom zero-allocation code paths (hash-chained WAL, HL7/DICOM parsers, SIMD notch filter, SDF interpolation)
 - [ ] Security review: Ed25519/TPM key handling, hash-chain tamper-evidence, HIPAA encryption at rest/in transit, narcotic chain-of-custody biometric-auth spoofing resistance, AI-session and MCP-interface review (privilege scoping, safety-veto bypass attempts, prompt-injection via tool inputs)
-- [ ] Full documentation pass (`docs/`, crate-level rustdoc, architecture diagrams)
+- [x] Full documentation pass (`docs/`, crate-level rustdoc, architecture diagrams) *(README crate table and status refreshed; ARCHITECTURE table refreshed; rustdoc on every public item is enforced by the `missing_docs` lint)*
 - [ ] Tag v1.0.0 release (pending: commit the workspace, then cut the `v1.0.0` git tag)

@@ -598,6 +598,7 @@ name = "tpt-t-medical-bridge-hl7fhir"
 version = "1.0.0"
 dependencies = [
  "serde_json",
+ "tpt-t-medical-compliance",
 ]
 
 [[package]]

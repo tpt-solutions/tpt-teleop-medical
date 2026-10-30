@@ -12,6 +12,7 @@ categories = ["parser-implementations"]
 
 [dependencies]
 serde_json = "1"
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
 
 [lints]
 workspace = true

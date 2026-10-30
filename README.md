@@ -3,8 +3,34 @@
 Safety-critical, zero-bloat Rust middleware for telesurgery, hospital
 logistics, automated pharmacy, and sterilization robotics.
 
-> **Status: pre-alpha.** The workspace scaffolding exists; no crates have been
-> implemented yet. See [todo.md](todo.md) for the phased checklist.
+> **Status: pre-alpha.** Pure logic is implemented and tested for most of the
+> safety, compliance, bridge and hospital-automation crates. Hardware
+> integration is not: there is no real-time target, no O_DIRECT WAL, no
+> hardware-backed keys, no arm geometry, and no teleoperation adapter. Nothing
+> here should be used on a patient. See [todo.md](todo.md) for the full
+> checklist.
+
+## Crates
+
+| Crate | What it does | Status |
+|---|---|---|
+| `tpt-t-medical-ring` | Wait-free SPSC ring buffer | Done; loom-checked |
+| `tpt-t-medical-core` | Surgical state machine, tick loop, audited transitions | Logic done |
+| `tpt-t-medical-compliance` | Hash-chained, Ed25519-signed journal; file WAL | Logic done; no O_DIRECT |
+| `tpt-t-medical-safety` | TMR vote, envelope, force, watchdog, latched E-stop | Logic done; no RT timing |
+| `tpt-t-medical-hipaa` | AES-256-GCM PHI, consent, revocation, access audit | Logic done; no hardware keys |
+| `tpt-t-medical-surgical` | Motion scaling, tremor notch, SDF fixtures | Signal and geometry done |
+| `tpt-t-medical-haptic` | Impedance contact, hold-last-value loop | Logic done; no pinned core |
+| `tpt-t-medical-sim` | Joint dynamics and fault injection | Headless core only |
+| `tpt-t-medical-pharmacy` | FEFO, cold chain, narcotic custody | Logic done |
+| `tpt-t-medical-sterilize` | UV-C dose planning, coverage check | Logic done; no LiDAR |
+| `tpt-t-medical-logistics` | Clean/dirty zones, elevator arbitration | Logic done; no path planning |
+| `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting | Parsers done; not wired to logistics or pharmacy |
+| `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata | Parser done; no network services |
+| `tpt-t-medical-conformance` | Cross-bridge tests (test-only) | Done |
+
+Not started: edge control, tracking, vision, teleop, the AI and MCP layer, and
+the visualizer. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## What it is
 

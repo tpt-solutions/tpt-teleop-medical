@@ -20,6 +20,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod audit;
 pub mod fhir;
 
 use core::fmt;
