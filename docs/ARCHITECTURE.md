@@ -17,7 +17,7 @@ gets a section here once it has an implementation.
 | Hospital logistics | `tpt-t-medical-sterilize` | LiDAR room mapping, UV-C dosage, coverage validation | Dose planning and coverage validation done; LiDAR mapping pending |
 | Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Pure logic done; RT timing and core-isolated copies pending |
 | | `tpt-t-medical-compliance` | Hash-chained audit log, Ed25519 signatures | Chain, Ed25519 and file WAL done; O_DIRECT and hardware keys pending |
-| | `tpt-t-medical-hipaa` | PHI encryption (AES-256-GCM), consent-token gating | Encryption and consent done; key storage and revocation pending |
+| | `tpt-t-medical-hipaa` | PHI encryption (AES-256-GCM), consent-token gating | Encryption, consent, revocation and access audit done; hardware key storage pending |
 | Edge & perception | `tpt-t-medical-edge` | 1 kHz real-time arm control loop | Not started |
 | | `tpt-t-medical-track` | Optical, EM and imaging tracking fusion, EKF | Not started |
 | Foundations | `tpt-t-medical-ring` | Wait-free SPSC ring buffer (MPSC deferred) | SPSC core done, loom-verified |

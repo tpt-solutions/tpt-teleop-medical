@@ -27,7 +27,7 @@ pub enum Purpose {
 }
 
 impl Purpose {
-    const fn bit(self) -> u8 {
+    pub(crate) const fn bit(self) -> u8 {
         match self {
             Self::Treatment => 1 << 0,
             Self::Logging => 1 << 1,
@@ -47,6 +47,8 @@ pub enum ConsentError {
     NotConsented(Purpose),
     /// The token has expired.
     Expired,
+    /// The token has been revoked by the consent authority.
+    Revoked,
 }
 
 impl fmt::Display for ConsentError {
@@ -56,6 +58,7 @@ impl fmt::Display for ConsentError {
             Self::WrongPatient => f.write_str("consent token is for a different patient"),
             Self::NotConsented(p) => write!(f, "consent not granted for {p:?}"),
             Self::Expired => f.write_str("consent token has expired"),
+            Self::Revoked => f.write_str("consent token has been revoked"),
         }
     }
 }
@@ -72,6 +75,13 @@ pub struct ConsentToken {
 }
 
 impl ConsentToken {
+    /// Returns the token's identifier: the digest of its signed fields. Used to
+    /// revoke it.
+    #[must_use]
+    pub fn id(&self) -> Hash {
+        digest(&self.patient, self.purposes, self.expires_us)
+    }
+
     /// Issues a token. Called by the consent authority.
     ///
     /// The token is valid while `now_us < expires_us`.

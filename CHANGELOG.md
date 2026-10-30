@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Phase 2 closing items in `tpt-t-medical-hipaa`: consent revocation (`RevocationLedger`, journalled and replayed on open; a revoked token is refused even with a valid signature), and an access audit (`ReleaseAudit`) that journals every attempt, granted or refused, before any plaintext is returned. If the journal write fails, nothing is decrypted.
 - `tpt-t-medical-pharmacy` narcotic custody: `CustodyLedger` journals every receipt and transfer through the compliance journal. Only the current holder can transfer, and the authenticated person must be that holder. The ledger is rebuilt by replaying the journal, and a validly signed record that breaks the custody rules stops the open.
 - Phase 5 logic: `tpt-t-medical-pharmacy` (FEFO dispensing, all-or-nothing, expired lots never issued; cold-chain excursion alerts past a grace period, with non-finite readings treated as out of range), `tpt-t-medical-sterilize` (UV-C dose planning from geometry, post-cycle coverage check; reflection not credited), and `tpt-t-medical-logistics` (clean/dirty/isolation rules that require a complete UV cycle before re-entering a clean zone; single-occupancy elevator with emergency priority).
 - `tpt-t-medical-haptic`: 1 kHz tick loop with an impedance contact model against a plane. It reads the newest sample from the lock-free ring, and holds the last force on a missed deadline, a missing or stale sample, or an invalid sample. Force is never zeroed.

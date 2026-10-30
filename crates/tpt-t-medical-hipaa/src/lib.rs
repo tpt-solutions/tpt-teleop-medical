@@ -1,23 +1,26 @@
 //! HIPAA-oriented data handling for tpt-teleop-medical (spec.txt §3, §4.4).
 //!
-//! Two parts:
-//!
 //! * [`phi`] encrypts patient data with AES-256-GCM. Each record is bound to
 //!   its patient identifier.
 //! * [`consent`] issues and checks signed consent tokens, which grant a
 //!   patient's data for specific purposes until an expiry time.
+//! * [`revocation`] journals consent revocations, so a revoked token stays
+//!   revoked across restarts.
+//! * [`release_audit`] journals every access attempt, granted or refused,
+//!   before any plaintext is returned.
 //!
-//! [`release`] is the only way to read PHI back. It checks consent first and
-//! decrypts only if consent passes.
+//! [`release`] is the unaudited building block. It checks consent first and
+//! decrypts only if consent passes. Production code should use
+//! [`release_audit::ReleaseAudit`], which records the attempt as well.
 //!
-//! Not implemented yet: key storage in hardware, consent revocation, and
-//! audit records for each release. A release should be journalled through
-//! `tpt-t-medical-compliance`, but that wiring is left to the caller.
+//! Not implemented yet: key storage in hardware.
 
 #![forbid(unsafe_code)]
 
 pub mod consent;
 pub mod phi;
+pub mod release_audit;
+pub mod revocation;
 
 use core::fmt;
 
@@ -25,6 +28,8 @@ use tpt_t_medical_compliance::Verifier;
 
 pub use consent::{ConsentError, ConsentToken, Purpose};
 pub use phi::{Phi, PhiError, PhiKey};
+pub use release_audit::{AuditedReleaseError, ReleaseAudit};
+pub use revocation::{RevocationError, RevocationLedger, RevocationSet};
 
 /// Why PHI was not released.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,6 +51,17 @@ impl fmt::Display for ReleaseError {
 
 impl std::error::Error for ReleaseError {}
 
+/// One request to read a patient's PHI.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Request {
+    /// The patient whose record is wanted.
+    pub patient: [u8; 16],
+    /// The use the data is wanted for.
+    pub purpose: Purpose,
+    /// The time of the request, in microseconds.
+    pub now_us: u64,
+}
+
 /// Seals `plaintext` for `patient`. The patient identifier is the associated
 /// data, so the record can only be opened for that patient.
 ///
@@ -60,8 +76,8 @@ pub fn seal_for_patient(
     key.seal(&patient, plaintext)
 }
 
-/// Decrypts a record for `patient`, but only if `token` grants `purpose` at
-/// `now_us`.
+/// Decrypts a record for `request.patient`, but only if `token` grants
+/// `request.purpose` and has not been revoked.
 ///
 /// Consent is checked before any decryption, so a refused request never
 /// touches the key.
@@ -74,15 +90,21 @@ pub fn release<V: Verifier + ?Sized>(
     key: &PhiKey,
     token: &ConsentToken,
     verifier: &V,
-    patient: [u8; 16],
-    purpose: Purpose,
-    now_us: u64,
+    revoked: &RevocationSet,
+    request: &Request,
     sealed: &[u8],
 ) -> Result<Phi, ReleaseError> {
-    token
-        .check(verifier, patient, purpose, now_us)
-        .map_err(ReleaseError::Consent)?;
-    key.open(&patient, sealed).map_err(ReleaseError::Phi)
+    revocation::check_with_revocations(
+        token,
+        verifier,
+        revoked,
+        request.patient,
+        request.purpose,
+        request.now_us,
+    )
+    .map_err(ReleaseError::Consent)?;
+    key.open(&request.patient, sealed)
+        .map_err(ReleaseError::Phi)
 }
 
 #[cfg(test)]
@@ -98,6 +120,14 @@ mod tests {
         Ed25519Signer::from_seed(&[31; 32])
     }
 
+    fn request(patient: [u8; 16], purpose: Purpose, now_us: u64) -> Request {
+        Request {
+            patient,
+            purpose,
+            now_us,
+        }
+    }
+
     #[test]
     fn release_returns_plaintext_when_consent_passes() {
         let key = PhiKey::new(&KEY);
@@ -109,9 +139,8 @@ mod tests {
             &key,
             &token,
             &auth.verifier(),
-            ALICE,
-            Purpose::Treatment,
-            1,
+            &RevocationSet::new(),
+            &request(ALICE, Purpose::Treatment, 1),
             &sealed,
         )
         .expect("released");
@@ -130,9 +159,8 @@ mod tests {
             &key,
             &token,
             &auth.verifier(),
-            ALICE,
-            Purpose::Training,
-            1,
+            &RevocationSet::new(),
+            &request(ALICE, Purpose::Training, 1),
             &sealed,
         )
         .expect_err("training not consented");
@@ -156,9 +184,8 @@ mod tests {
             &key,
             &bobs_consent,
             &auth.verifier(),
-            BOB,
-            Purpose::Treatment,
-            1,
+            &RevocationSet::new(),
+            &request(BOB, Purpose::Treatment, 1),
             &alices_record,
         )
         .expect_err("record bound to alice");
@@ -177,13 +204,34 @@ mod tests {
             &key,
             &token,
             &auth.verifier(),
-            ALICE,
-            Purpose::Treatment,
-            100,
+            &RevocationSet::new(),
+            &request(ALICE, Purpose::Treatment, 100),
             &sealed,
         )
         .expect_err("expired");
 
         assert_eq!(err, ReleaseError::Consent(ConsentError::Expired));
+    }
+
+    #[test]
+    fn revoked_consent_refuses_release() {
+        let key = PhiKey::new(&KEY);
+        let auth = authority();
+        let sealed = seal_for_patient(&key, ALICE, b"record").expect("seal");
+        let token = ConsentToken::issue(&auth, ALICE, &[Purpose::Treatment], 10_000);
+        let mut revoked = RevocationSet::new();
+        revoked.insert(token.id());
+
+        let err = release(
+            &key,
+            &token,
+            &auth.verifier(),
+            &revoked,
+            &request(ALICE, Purpose::Treatment, 1),
+            &sealed,
+        )
+        .expect_err("revoked");
+
+        assert_eq!(err, ReleaseError::Consent(ConsentError::Revoked));
     }
 }
