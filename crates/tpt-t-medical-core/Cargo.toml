@@ -9,5 +9,8 @@ description = "Central event loop and surgical state machine (spec.txt §3, Phas
 keywords = ["surgical", "state-machine", "safety"]
 categories = ["science::robotics", "embedded"]
 
+[dependencies]
+tpt-t-medical-ring = { path = "../tpt-t-medical-ring" }
+
 [lints]
 workspace = true

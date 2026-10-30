@@ -8,7 +8,7 @@ gets a section here once it has an implementation.
 
 | Group | Crate | Responsibility | Status |
 |---|---|---|---|
-| Core & surgical control | `tpt-t-medical-core` | Event loop, surgical state machine, lock-free message bus | State machine done; event loop and bus pending |
+| Core & surgical control | `tpt-t-medical-core` | Event loop, surgical state machine, lock-free message bus | State machine, tick loop and per-producer lanes done |
 | | `tpt-t-medical-surgical` | Master-slave kinematics, motion scaling, tremor filter, virtual fixtures | Not started |
 | | `tpt-t-medical-haptic` | 1 kHz haptic rendering, impedance control | Not started |
 | | `tpt-t-medical-vision` | Stereoscopic pipeline, 3D reconstruction, AR overlay | Not started |
