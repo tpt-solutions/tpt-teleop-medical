@@ -35,7 +35,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 2 — Safety & Compliance Backbone
 
 - [ ] `tpt-t-medical-safety` — Triple-Modular Redundancy (TMR) voter across 3 isolated cores, zero-allocation static memory, independent watchdogs, force/torque limiters, workspace envelope enforcement, emergency-stop hierarchies (foot pedal, hand switch, voice, auto), <100us disagreement-to-safe-state
-- [ ] `tpt-t-medical-compliance` *(hash chain and verification done; Ed25519 signer blocked on library decision; WAL and O_DIRECT pending)* — append-only hash-chained WAL; events serialized via rkyv, signed Ed25519 (TPM/secure-enclave-backed key), SHA-256 chained, written O_DIRECT to NVMe; tamper-evident (broken chain invalidates log); log export/seal for post-op regulatory archive
+- [ ] `tpt-t-medical-compliance` *(hash chain and Ed25519 signing done; WAL, O_DIRECT and hardware-backed keys pending)* — append-only hash-chained WAL; events serialized via rkyv, signed Ed25519 (TPM/secure-enclave-backed key), SHA-256 chained, written O_DIRECT to NVMe; tamper-evident (broken chain invalidates log); log export/seal for post-op regulatory archive
 - [ ] `tpt-t-medical-hipaa` — PHI encryption at rest (AES-256-GCM) and in transit; consent-token gating so PHI never enters logs/training data without explicit consent
 
 ## Phase 3 — Surgical Control & Haptics

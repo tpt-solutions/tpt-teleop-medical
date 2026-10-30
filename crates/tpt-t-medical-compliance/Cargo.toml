@@ -11,6 +11,7 @@ keywords = ["audit", "hash-chain", "compliance"]
 categories = ["cryptography", "data-structures"]
 
 [dependencies]
+ed25519-dalek = "3"
 sha2 = "0.10"
 
 [lints]

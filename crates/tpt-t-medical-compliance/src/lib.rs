@@ -5,9 +5,10 @@
 //! any entry, or removing or reordering one, breaks verification at the first
 //! affected position.
 //!
-//! Signing is pluggable through [`Signer`] and [`Verifier`]. This crate ships
-//! no signing backend. The spec's Ed25519 choice depends on a license decision
-//! that is still open (see `docs/ARCHITECTURE.md`).
+//! Signing is pluggable through [`Signer`] and [`Verifier`]. The [`ed25519`]
+//! module provides the Ed25519 backend, built on `ed25519-dalek`
+//! (BSD-3-Clause). Hardware-backed keys (TPM, secure enclave) are not
+//! implemented yet.
 //!
 //! Not yet implemented: the on-disk WAL, `O_DIRECT` writes, and rkyv
 //! serialization of payloads. Payloads are opaque bytes for now.
@@ -16,6 +17,8 @@
 //! control path.
 
 #![forbid(unsafe_code)]
+
+pub mod ed25519;
 
 use core::fmt;
 
