@@ -17,7 +17,7 @@ gets a section here once it has an implementation.
 | | `tpt-t-medical-sterilize` | LiDAR room mapping, UV-C dosage, coverage validation | Not started |
 | Safety & compliance | `tpt-t-medical-safety` | TMR voter, watchdogs, force limits, workspace envelope, E-stop | Pure logic done; RT timing and core-isolated copies pending |
 | | `tpt-t-medical-compliance` | Hash-chained audit log, Ed25519 signatures | Chain, Ed25519 and file WAL done; O_DIRECT and hardware keys pending |
-| | `tpt-t-medical-hipaa` | PHI encryption, consent-token gating | Not started |
+| | `tpt-t-medical-hipaa` | PHI encryption (AES-256-GCM), consent-token gating | Encryption and consent done; key storage and revocation pending |
 | Edge & perception | `tpt-t-medical-edge` | 1 kHz real-time arm control loop | Not started |
 | | `tpt-t-medical-track` | Optical, EM and imaging tracking fusion, EKF | Not started |
 | Foundations | `tpt-t-medical-ring` | Wait-free SPSC ring buffer (MPSC deferred) | SPSC core done, loom-verified |
@@ -64,3 +64,4 @@ flowchart LR
 - Unicode-3.0 is in the `cargo deny` allow list, but spec.txt §2 does not list
   it (see [deny.toml](../deny.toml)).
 - Signing library: decided. `ed25519-dalek` (BSD-3-Clause) with `sha2`. `ring` is not used: it is Apache-2.0 AND ISC, which the allow list rejects, and no exception is granted.
+- AES-256-GCM: `aes-gcm` 0.10, not 0.11. Version 0.11 pulls in `ctutils` 0.4.2, which has RUSTSEC-2026-0385. The fix (ctutils 0.4.4) needs Rust 1.87, above the workspace MSRV of 1.85. Revisit when the MSRV moves.

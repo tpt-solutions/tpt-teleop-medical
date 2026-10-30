@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-hipaa`: PHI encryption with AES-256-GCM. Each record gets a random 96-bit nonce and binds the patient identifier as associated data. Consent tokens are signed, purpose-limited and expiring. `release` checks consent before decrypting. `Phi` redacts its Debug output.
 - `AuditedLoop` in `tpt-t-medical-core`: every transition is journalled before it is applied. Safety stops are journalled as a reason record followed by the transition, and they take effect even if the journal write fails. Event and state codes are fixed for the audit format.
 - `tpt-t-medical-safety`: safety monitor. Workspace envelope, force limit (NaN refused), watchdog (gaps and clock regressions), latched emergency stop from four sources, and a TMR voter that requires all three copies to agree. Stops latch until an explicit reset. Timing targets are not verified.
 - `tpt-t-medical-compliance`: append-only hash-chained audit log with SHA-256 digests over sequence, previous hash and length-prefixed payload. Verification reports the first broken entry and the check that failed. Ed25519 signatures come from `ed25519-dalek` (BSD-3-Clause) with `verify_strict`. The `ring` crate is not used because it is Apache-2.0 AND ISC.

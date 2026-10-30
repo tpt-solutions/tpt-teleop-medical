@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "crates/tpt-t-medical-compliance",
     "crates/tpt-t-medical-core",
+    "crates/tpt-t-medical-hipaa",
     "crates/tpt-t-medical-ring",
     "crates/tpt-t-medical-safety",
 ]
