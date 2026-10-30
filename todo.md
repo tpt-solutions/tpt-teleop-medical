@@ -17,19 +17,19 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 ## Phase 0 — Project Scaffolding
 
-- [ ] Workspace `Cargo.toml` (resolver = "3", edition = "2024", rust-version = "1.85", workspace version 1.0.0)
-- [ ] Dual license files: `LICENSE-MIT`, `LICENSE-APACHE` (copyright TPT Solutions); `license = "MIT OR Apache-2.0"` in workspace manifest
-- [ ] `deny.toml` (cargo-deny) — allow MIT/BSD-2/BSD-3/ISC/Zlib/MPL-2.0; dual-licensed crates (e.g. `ring`, `rkyv`) resolved strictly under MIT; ban any strictly-Apache-2.0-only crate (spec.txt §2, §7)
-- [ ] `rust-toolchain.toml` (channel = stable, components = rustfmt, clippy)
-- [ ] `.github/workflows/ci.yml` (build + test matrix)
-- [ ] `.github/workflows/lint.yml` (fmt, clippy, cargo-deny check)
-- [ ] `README.md`, `CHANGELOG.md`, `SECURITY.md`
-- [ ] `docs/ARCHITECTURE.md` skeleton (workspace map, crate responsibilities, data-flow diagram from spec.txt §6)
-- [ ] `git init` + initial commit
+- [x] Workspace `Cargo.toml` (resolver = "3", edition = "2024", rust-version = "1.85", workspace version 1.0.0)
+- [x] Dual license files: `LICENSE-MIT`, `LICENSE-APACHE` (copyright TPT Solutions); `license = "MIT OR Apache-2.0"` in workspace manifest
+- [x] `deny.toml` (cargo-deny) — allow MIT/BSD-2/BSD-3/ISC/Zlib/MPL-2.0; dual-licensed crates (e.g. `ring`, `rkyv`) resolved strictly under MIT; ban any strictly-Apache-2.0-only crate (spec.txt §2, §7)
+- [x] `rust-toolchain.toml` (channel = stable, components = rustfmt, clippy)
+- [x] `.github/workflows/ci.yml` (build + test matrix)
+- [x] `.github/workflows/lint.yml` (fmt, clippy, cargo-deny check)
+- [x] `README.md`, `CHANGELOG.md`, `SECURITY.md`
+- [x] `docs/ARCHITECTURE.md` skeleton (workspace map, crate responsibilities, data-flow diagram from spec.txt §6)
+- [x] `git init` + initial commit
 
 ## Phase 1 — Foundation Primitives
 
-- [ ] Decide lock-free SPSC/MPSC ring-buffer sourcing: reuse/vendor `tpt-teleop`'s ring pattern vs. new `tpt-t-medical-ring` (needed by the haptic↔vision/tracking handoff in spec.txt §4.2)
+- [x] Decide lock-free SPSC/MPSC ring-buffer sourcing: reuse/vendor `tpt-teleop`'s ring pattern vs. new `tpt-t-medical-ring` (needed by the haptic↔vision/tracking handoff in spec.txt §4.2)
 - [ ] `tpt-t-medical-core` — central event loop, surgical state machine (Idle → Registered → Active → Paused → Emergency), lock-free message bus
 
 ## Phase 2 — Safety & Compliance Backbone
@@ -74,10 +74,10 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 *(Scaffolding only — a real IEC 62304/ISO 14971/ISO 13485 certification requires an actual QMS, external audits, and organizational process beyond this repo; these are the templates a certification effort would build on.)*
 
-- [ ] `docs/regulatory/software-development-plan.md` template (IEC 62304 SDLC framing: classification, lifecycle activities, verification/validation strategy)
-- [ ] `docs/regulatory/risk-management-file.md` template (ISO 14971: hazard identification, risk analysis/evaluation, mitigation traceability — seeded from spec.txt §4/§5.5 safety mechanisms)
-- [ ] `docs/regulatory/qms-references.md` (ISO 13485 process pointers: where design controls, CAPA, and document control would hook into org-level QMS)
-- [ ] `docs/regulatory/requirements-traceability-matrix.md` skeleton (spec.txt requirement → crate/module → test evidence)
+- [x] `docs/regulatory/software-development-plan.md` template (IEC 62304 SDLC framing: classification, lifecycle activities, verification/validation strategy)
+- [x] `docs/regulatory/risk-management-file.md` template (ISO 14971: hazard identification, risk analysis/evaluation, mitigation traceability — seeded from spec.txt §4/§5.5 safety mechanisms)
+- [x] `docs/regulatory/qms-references.md` (ISO 13485 process pointers: where design controls, CAPA, and document control would hook into org-level QMS)
+- [x] `docs/regulatory/requirements-traceability-matrix.md` skeleton (spec.txt requirement → crate/module → test evidence)
 
 ## Phase 9 — Integration, Hardening & Release
 

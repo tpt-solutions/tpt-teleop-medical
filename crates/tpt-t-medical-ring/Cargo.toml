@@ -1,0 +1,18 @@
+[package]
+name = "tpt-t-medical-ring"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Wait-free SPSC ring buffer for the haptic and tracking handoff (spec.txt §4.2)"
+keywords = ["spsc", "ring-buffer", "lock-free", "wait-free"]
+categories = ["concurrency", "data-structures"]
+
+[lints]
+workspace = true
+
+# loom is only fetched when building with --cfg loom, so normal builds stay
+# free of it.
+[target.'cfg(loom)'.dependencies]
+loom = "0.7"

@@ -1,0 +1,42 @@
+# cargo-deny policy for tpt-teleop-medical (spec.txt §2, §7).
+# Run with: cargo deny check
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+# Dual-licensed crates (e.g. "MIT OR Apache-2.0") are accepted only through
+# their MIT option: Apache-2.0 is deliberately absent from this list, so any
+# Apache-2.0-only crate fails the check.
+allow = [
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    # Permissive; pulled in transitively by unicode-ident (proc-macro2) and
+    # not listed in spec.txt §2. Remove if the MIT-chain policy is kept strict.
+    "Unicode-3.0",
+]
+confidence-threshold = 0.93
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+# Cryptography must come from `ring` (spec.txt §7), never OpenSSL.
+deny = [
+    { crate = "openssl" },
+    { crate = "openssl-sys" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
