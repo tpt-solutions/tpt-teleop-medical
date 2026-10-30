@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-logistics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Hospital delivery robots: clean/dirty/isolation zone rules and single-occupancy elevator arbitration (spec.txt §5.2)"
+keywords = ["logistics", "infection-control", "elevator"]
+categories = ["science::robotics"]
+
+[dependencies]
+tpt-t-medical-sterilize = { path = "../tpt-t-medical-sterilize" }
+
+[lints]
+workspace = true

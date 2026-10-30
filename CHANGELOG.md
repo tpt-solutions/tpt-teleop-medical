@@ -8,6 +8,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Phase 5 logic: `tpt-t-medical-pharmacy` (FEFO dispensing, all-or-nothing, expired lots never issued; cold-chain excursion alerts past a grace period, with non-finite readings treated as out of range), `tpt-t-medical-sterilize` (UV-C dose planning from geometry, post-cycle coverage check; reflection not credited), and `tpt-t-medical-logistics` (clean/dirty/isolation rules that require a complete UV cycle before re-entering a clean zone; single-occupancy elevator with emergency priority).
 - `tpt-t-medical-haptic`: 1 kHz tick loop with an impedance contact model against a plane. It reads the newest sample from the lock-free ring, and holds the last force on a missed deadline, a missing or stale sample, or an invalid sample. Force is never zeroed.
 - `tpt-t-medical-surgical`: motion scaling (1:1 to 10:1), RBJ band-stop tremor notch at 10 Hz with DF-II-T state, trilinear SDF lookup that returns unknown outside the grid, and a linear progressive fixture force. NaN distance gives maximum force.
 - `tpt-t-medical-hipaa`: PHI encryption with AES-256-GCM. Each record gets a random 96-bit nonce and binds the patient identifier as associated data. Consent tokens are signed, purpose-limited and expiring. `release` checks consent before decrypting. `Phi` redacts its Debug output.

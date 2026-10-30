@@ -1,0 +1,14 @@
+[package]
+name = "tpt-t-medical-pharmacy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Pharmacy dispensing: FEFO stock selection and refrigerated cold-chain alerting (spec.txt §5.3)"
+keywords = ["pharmacy", "fefo", "cold-chain"]
+categories = ["science::robotics"]
+
+[lints]
+workspace = true

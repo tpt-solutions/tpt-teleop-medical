@@ -55,15 +55,26 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 ## Phase 5 — Hospital Logistics & Automation
 
-- [ ] `tpt-t-medical-logistics` — corridor/elevator/door navigation; clean/dirty zone assignment with mandatory UV-sterilize-before-re-entry; MQTT elevator request/single-occupancy arbitration with emergency-transport priority; linens/meals/medication/lab-sample/biohazard transport profiles with infection-control protocols
-- [ ] `tpt-t-medical-pharmacy` — unit-dose pick/verify (barcode + weight)/package; refrigerated-storage continuous temperature logging with out-of-range alerting; FEFO (first-expired-first-out) dispensing; narcotic chain-of-custody log entries (biometric/badge auth, timestamp, crypto signature) written through `tpt-t-medical-compliance`
-- [ ] `tpt-t-medical-sterilize` — LiDAR room mapping, UV-C dosage calculation from surface distance/reflectivity/shadowing, post-cycle re-scan coverage validation
+- [ ] `tpt-t-medical-logistics` *(zone rules and elevator arbitration done; path planning and MQTT pending)* — corridor/elevator/door navigation; clean/dirty zone assignment with mandatory UV-sterilize-before-re-entry; MQTT elevator request/single-occupancy arbitration with emergency-transport priority; linens/meals/medication/lab-sample/biohazard transport profiles with infection-control protocols
+- [ ] `tpt-t-medical-pharmacy` *(FEFO and cold-chain done; packaging, barcode/weight and custody pending)* — unit-dose pick/verify (barcode + weight)/package; refrigerated-storage continuous temperature logging with out-of-range alerting; FEFO (first-expired-first-out) dispensing; narcotic chain-of-custody log entries (biometric/badge auth, timestamp, crypto signature) written through `tpt-t-medical-compliance`
+- [ ] `tpt-t-medical-sterilize` *(dose planning and coverage check done; LiDAR mapping pending)* — LiDAR room mapping, UV-C dosage calculation from surface distance/reflectivity/shadowing, post-cycle re-scan coverage validation
 
 ## Phase 6 — Hospital-IT Interoperability Bridges
 
 - [ ] `tpt-t-medical-bridge-hl7fhir` — HL7v2 ADT feed ingestion (patient admission/transfer/discharge) and FHIR resources (orders, medication requests) in/out, feeding `tpt-t-medical-logistics`/`tpt-t-medical-pharmacy` and posting audit-relevant events to `tpt-t-medical-compliance`
 - [ ] `tpt-t-medical-bridge-dicom` — DICOM query/retrieve for pre-op CT/MRI ingestion into `tpt-t-medical-vision`'s segmentation pipeline; DICOM SR export path for structured post-op reports
 - [ ] Cross-bridge conformance/integration test suite (HL7/FHIR + DICOM fixtures against both bridge crates)
+
+## Phase 6.5 — AI & Fleet Dispatch
+
+*(Anticipated in bridge spec.txt §4.1 and its closing "future extensions" note; spec.txt §5.6 "AI & Fleet Dispatch" is referenced there but not yet written. AI must never weaken the safety or audit guarantees that apply to a human operator.)*
+
+- [ ] `tpt-t-medical-ai-session` — AI controller as a DTI operator: `operator_id` resolves to an AI agent; AUTONOMOUS → REQUESTING_TELEOP → TELEOP_ACTIVE → RETURNING_TO_AUTONOMY transitions; every AI `ControlCommand` passes the same `tpt-t-medical-safety` veto (TMR, envelope, force, E-stop) as a human command; every AI command and handoff logged through `tpt-t-medical-compliance`
+- [ ] Human-in-the-loop gating: AI-assist vs full-autonomy modes with explicit human authorization and immediate human override; surgical sessions default to assist-only
+- [ ] Fleet dispatch: one dispatcher (AI or human) managing several concurrent DTI sessions (one `operator_id`/session per unit today), with fleet-level orchestration above that
+- [ ] `tpt-t-medical-mcp` — MCP supervisory interface for fleet orchestration: read-mostly, scoped and auditable write tools, no tool can bypass `tpt-t-medical-safety`
+- [ ] PHI/consent gating for AI and MCP tools: no PHI visible without a `tpt-t-medical-hipaa` consent token; same gate for any training data
+- [ ] Simulator coverage (Phase 7): AI-session and fleet scenarios, including misbehaving-AI fault injection
 
 ## Phase 7 — Developer Experience & Simulation
 
@@ -85,6 +96,6 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 - [ ] Full `cargo-deny` audit pass across entire dependency tree (MIT-chain enforcement, spec.txt §7)
 - [ ] Determinism/performance validation: <1ms control-loop latency, 1kHz haptic <50us execution / 1ms deadline, TMR voter <100us disagreement response, SDF <20us, notch+scaling filters <5us, E-stop <10ms
 - [ ] Fuzz/property testing for custom zero-allocation code paths (hash-chained WAL, HL7/DICOM parsers, SIMD notch filter, SDF interpolation)
-- [ ] Security review: Ed25519/TPM key handling, hash-chain tamper-evidence, HIPAA encryption at rest/in transit, narcotic chain-of-custody biometric-auth spoofing resistance
+- [ ] Security review: Ed25519/TPM key handling, hash-chain tamper-evidence, HIPAA encryption at rest/in transit, narcotic chain-of-custody biometric-auth spoofing resistance, AI-session and MCP-interface review (privilege scoping, safety-veto bypass attempts, prompt-injection via tool inputs)
 - [ ] Full documentation pass (`docs/`, crate-level rustdoc, architecture diagrams)
 - [ ] Tag v1.0.0 release (pending: commit the workspace, then cut the `v1.0.0` git tag)
