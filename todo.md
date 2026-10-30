@@ -69,7 +69,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 
 *(Anticipated in bridge spec.txt §4.1 and its closing "future extensions" note; spec.txt §5.6 "AI & Fleet Dispatch" is referenced there but not yet written. AI must never weaken the safety or audit guarantees that apply to a human operator.)*
 
-- [ ] `tpt-t-medical-ai-session` — AI controller as a DTI operator: `operator_id` resolves to an AI agent; AUTONOMOUS → REQUESTING_TELEOP → TELEOP_ACTIVE → RETURNING_TO_AUTONOMY transitions; every AI `ControlCommand` passes the same `tpt-t-medical-safety` veto (TMR, envelope, force, E-stop) as a human command; every AI command and handoff logged through `tpt-t-medical-compliance`
+- [ ] `tpt-t-medical-ai-session` *(draft design written for review: docs/design/ai-session.md; no code yet, open questions pending)* — AI controller as a DTI operator: `operator_id` resolves to an AI agent; AUTONOMOUS → REQUESTING_TELEOP → TELEOP_ACTIVE → RETURNING_TO_AUTONOMY transitions; every AI `ControlCommand` passes the same `tpt-t-medical-safety` veto (TMR, envelope, force, E-stop) as a human command; every AI command and handoff logged through `tpt-t-medical-compliance`
 - [ ] Human-in-the-loop gating: AI-assist vs full-autonomy modes with explicit human authorization and immediate human override; surgical sessions default to assist-only
 - [ ] Fleet dispatch: one dispatcher (AI or human) managing several concurrent DTI sessions (one `operator_id`/session per unit today), with fleet-level orchestration above that
 - [ ] `tpt-t-medical-mcp` — MCP supervisory interface for fleet orchestration: read-mostly, scoped and auditable write tools, no tool can bypass `tpt-t-medical-safety`
