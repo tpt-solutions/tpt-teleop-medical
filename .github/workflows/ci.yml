@@ -20,6 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # tpt-t-medical-teleop depends on tpt-teleop by relative path (../../../tpt-teleop),
+      # so the sibling repo must sit next to this checkout.
+      - name: Fetch sibling tpt-teleop repo
+        run: git clone --depth 1 https://github.com/tpt-solutions/tpt-teleop.git ../tpt-teleop
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -41,6 +46,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fetch sibling tpt-teleop repo
+        run: git clone --depth 1 https://github.com/tpt-solutions/tpt-teleop.git ../tpt-teleop
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -55,6 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fetch sibling tpt-teleop repo
+        run: git clone --depth 1 https://github.com/tpt-solutions/tpt-teleop.git ../tpt-teleop
 
       - name: Install nightly Miri
         uses: dtolnay/rust-toolchain@master
