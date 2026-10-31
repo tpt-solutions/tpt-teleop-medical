@@ -1,0 +1,18 @@
+[package]
+name = "tpt-t-medical-vision"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Endoscope vision: rectified stereo depth, 3D reconstruction, pre-op AR overlay, and segmentation to virtual-fixture distance grids (spec.txt §4.4, Phase 3)"
+keywords = ["stereo", "depth", "augmented-reality", "segmentation"]
+categories = ["computer-vision"]
+
+[dependencies]
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+tpt-t-medical-track = { path = "../tpt-t-medical-track" }
+
+[lints]
+workspace = true
