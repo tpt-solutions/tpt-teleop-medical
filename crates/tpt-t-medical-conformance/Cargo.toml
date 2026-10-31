@@ -15,6 +15,8 @@ categories = ["development-tools::testing"]
 tpt-t-medical-bridge-dicom = { path = "../tpt-t-medical-bridge-dicom" }
 tpt-t-medical-bridge-hl7fhir = { path = "../tpt-t-medical-bridge-hl7fhir" }
 tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+tpt-t-medical-vision = { path = "../tpt-t-medical-vision" }
 
 [lints]
 workspace = true

@@ -12,6 +12,7 @@
 #![forbid(unsafe_code)]
 
 pub mod overlay;
+pub mod segmentation;
 pub mod stereo;
 pub mod volume;
 
