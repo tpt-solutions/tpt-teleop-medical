@@ -1,7 +1,11 @@
 # AI session and fleet dispatch: draft design
 
-> **Status: draft for review. No code exists for this.** It covers Phase 6.5 of
-> [todo.md](../../todo.md). Spec §5.6, "AI & Fleet Dispatch", is referenced by
+> **Status: recommendations adopted and implemented in
+> `tpt-t-medical-ai-session`.** Open questions 1–4 were settled as this draft
+> recommends: assist-only (the AI proposes, the surgeon moves), surgeon-only
+> authority, one audit chain per unit, and MCP deferred. Spec §5.6 is still
+> not written, so the [assumed] requirements stand until it is. It covers
+> Phase 6.5 of [todo.md](../../todo.md). Spec §5.6, "AI & Fleet Dispatch", is referenced by
 > the bridge spec but has not been written, so the requirements below are
 > inferred from the bridge spec's design notes and from the existing safety
 > rules. Each inference is marked **[assumed]** and needs confirmation before

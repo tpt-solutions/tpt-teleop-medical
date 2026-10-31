@@ -16,21 +16,27 @@ logistics, automated pharmacy, and sterilization robotics.
 |---|---|---|
 | `tpt-t-medical-ring` | Wait-free SPSC ring buffer | Done; loom-checked |
 | `tpt-t-medical-core` | Surgical state machine, tick loop, audited transitions | Logic done |
-| `tpt-t-medical-compliance` | Hash-chained, Ed25519-signed journal; file WAL | Logic done; no O_DIRECT |
+| `tpt-t-medical-compliance` | Hash-chained, Ed25519-signed journal; file WAL; block-aligned direct-I/O log | Logic done; Windows direct I/O only; no hardware keys |
 | `tpt-t-medical-safety` | TMR vote, envelope, force, watchdog, latched E-stop | Logic done; no RT timing |
 | `tpt-t-medical-hipaa` | AES-256-GCM PHI, consent, revocation, access audit | Logic done; no hardware keys |
-| `tpt-t-medical-surgical` | Motion scaling, tremor notch, SDF fixtures | Signal and geometry done |
+| `tpt-t-medical-surgical` | Motion scaling, tremor notch, SDF fixtures, 7-DOF kinematics, predictive display, virtual-fixture guard | Signal, geometry and guard logic done; no RT timing |
+| `tpt-t-medical-edge` | 1 kHz torque pipeline: Jacobian force mapping, gravity, friction, limits, hold-last | Logic done; no RT core |
+| `tpt-t-medical-track` | Constant-velocity Kalman fusion; Horn rigid registration | Logic done; linear model; checked on simulated data |
+| `tpt-t-medical-ai-session` | AI assist-only session, surgeon-only authority, per-unit audit, fleet requests, PHI gate | Logic done; no DTI wiring; MCP deferred |
 | `tpt-t-medical-haptic` | Impedance contact, hold-last-value loop | Logic done; no pinned core |
-| `tpt-t-medical-sim` | Joint dynamics and fault injection | Headless core only |
-| `tpt-t-medical-pharmacy` | FEFO, cold chain, narcotic custody | Logic done |
-| `tpt-t-medical-sterilize` | UV-C dose planning, coverage check | Logic done; no LiDAR |
-| `tpt-t-medical-logistics` | Clean/dirty zones, elevator arbitration | Logic done; no path planning |
-| `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting | Parsers and audit done; MedicationRequest wired to pharmacy; ADT not yet wired to logistics |
-| `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata | Parser done; no network services |
+| `tpt-t-medical-sim` | Joint dynamics, fault injection, latency and jitter, tissue, tool position, AI fault scenarios | Headless core; no haptic rendering |
+| `tpt-t-medical-pharmacy` | FEFO, cold chain, narcotic custody, barcode/weight unit-dose packaging | Logic done |
+| `tpt-t-medical-sterilize` | UV-C dose planning, LiDAR room mapping with shadowing, coverage check | Logic done |
+| `tpt-t-medical-logistics` | Clean/dirty zones, elevator arbitration, UV-aware routing, MQTT framing, transport profiles | Logic done; no broker connection, no door model |
+| `tpt-t-medical-teleop` | Telesurgery adapter for the tpt-teleop `DomainTeleopInterface`: engage, command, disengage, emergency stop, sensor feed | Adapter done against the DTI; no multi-site session handling |
+| `tpt-t-medical-vision` | Stereo depth, point cloud, AR overlay, segmentation to fixture distance | Algorithms done on synthetic data; no real-time or clinical validation |
+| `tpt-t-medical-mcp` | MCP supervisory interface: read-only tools and one journalled assistance request | Done; no reset, release, limit or veto tool |
+| `tpt-t-medical-visualizer` | Scene model: trajectory, envelope, fixture, forces, timeline, TMR state, projection | Scene model and projection done; self-contained HTML export (`examples/export.rs`) |
+| `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting, pharmacy and transport feeds | Parsers, audit and both feeds done |
+| `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata; C-ECHO, C-FIND, C-GET, C-STORE client; Basic Text SR export | Parser, client and SR export done; no pixel ingestion; SR not conformance-validated |
 | `tpt-t-medical-conformance` | Cross-bridge tests (test-only) | Done |
 
-Not started: edge control, tracking, vision, teleop, the AI and MCP layer, and
-the visualizer. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The teleop adapter links to the tpt-teleop domain bridge (`tpt-teleop/crates/tpt-t-domain-bridge`) by path. Not started: multi-site session handling, pixel ingestion for the segmentation pipeline, the haptic device model, and a live feed into the visualizer. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## What it is
 
