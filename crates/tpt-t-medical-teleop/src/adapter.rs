@@ -383,6 +383,74 @@ const fn flag_for(reason: StopReason) -> u32 {
     }
 }
 
+impl<A: Actuators> Adapter<A> {
+    /// Applies one checked autonomous displacement to the operator's target.
+    ///
+    /// Used when the AI session is in full-autonomy mode and has returned
+    /// `Verdict::Commanded` for a proposal. The displacement is already tool
+    /// motion, so it skips the tremor notch and the motion scaler, which act on
+    /// operator input. It then goes through the same virtual-fixture guard, and
+    /// the same latch and target checks, as operator motion.
+    ///
+    /// The caller must pass only displacements the session has accepted.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the adapter is latched, no operator is engaged, the
+    /// target is still ramping down, the displacement is not finite, or the tool
+    /// position is unknown.
+    pub fn on_autonomous_motion(&mut self, delta_m: [f64; 3]) -> Result<()> {
+        if self.latched {
+            return Err(DomainError::adapter("stop is latched"));
+        }
+        if self.operator.is_none() || self.target_m.is_none() || self.ramp_left > 0 {
+            return Err(DomainError::adapter("no operator target to move"));
+        }
+        if !delta_m.iter().all(|v| v.is_finite()) {
+            return Err(DomainError::adapter("non-finite autonomous displacement"));
+        }
+        let now_us = self.clock_us;
+        self.move_target(now_us, delta_m)
+    }
+
+    /// Moves the target by one tool displacement, after the virtual-fixture
+    /// guard decides whether the tool may move that way.
+    fn move_target(&mut self, now_us: u64, delta: [f64; 3]) -> Result<()> {
+        let Some(tool) = self.tool_position() else {
+            return Err(DomainError::adapter("no joint state"));
+        };
+        let action = self.guard.evaluate(now_us, &self.cfg.sdf, tool, delta);
+        if let Some(target) = self.target_m {
+            match action {
+                Action::Follow { delta_m, force_n } => {
+                    // The guard checks the measured tool. The target is where the
+                    // arm is commanded, and it can lead the tool, so it is checked
+                    // as well. A lagging tool must not let the target into a structure.
+                    let next: [f64; 3] = core::array::from_fn(|k| target[k] + delta_m[k]);
+                    if self.cfg.sdf.distance(next).is_some_and(|d| d >= 0.0) {
+                        self.feedback_n = force_n;
+                        self.target_m = Some(next);
+                    } else {
+                        // Not applied. Full feedback, as the guard gives for an
+                        // unknown position.
+                        self.feedback_n = self.cfg.guard_max_force_n;
+                    }
+                }
+                Action::Blocked { force_n } => {
+                    // The motion would enter the structure. It is not applied, and
+                    // the surgeon feels the force.
+                    self.feedback_n = force_n;
+                }
+                Action::Override { retreat_m } => {
+                    self.feedback_n = self.cfg.guard_max_force_n;
+                    self.target_m = Some(core::array::from_fn(|k| tool[k] + retreat_m[k]));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 impl<A: Actuators> DomainTeleopInterface for Adapter<A> {
     fn on_teleop_engage(&mut self, operator: OperatorId) -> Result<()> {
         let Some(pos) = self.tool_position() else {
@@ -428,38 +496,7 @@ impl<A: Actuators> DomainTeleopInterface for Adapter<A> {
         let filtered = [0, 1, 2].map(|i| self.notch[i].process(master_m[i]));
         let delta = self.cfg.scaler.scale(filtered);
 
-        let Some(tool) = self.tool_position() else {
-            return Err(DomainError::adapter("no joint state"));
-        };
-        let action = self.guard.evaluate(now_us, &self.cfg.sdf, tool, delta);
-        if let Some(target) = self.target_m {
-            match action {
-                Action::Follow { delta_m, force_n } => {
-                    // The guard checks the measured tool. The target is where the
-                    // arm is commanded, and it can lead the tool, so it is checked
-                    // as well. A lagging tool must not let the target into a structure.
-                    let next: [f64; 3] = core::array::from_fn(|k| target[k] + delta_m[k]);
-                    if self.cfg.sdf.distance(next).is_some_and(|d| d >= 0.0) {
-                        self.feedback_n = force_n;
-                        self.target_m = Some(next);
-                    } else {
-                        // Not applied. Full feedback, as the guard gives for an
-                        // unknown position.
-                        self.feedback_n = self.cfg.guard_max_force_n;
-                    }
-                }
-                Action::Blocked { force_n } => {
-                    // The motion would enter the structure. It is not applied, and
-                    // the surgeon feels the force.
-                    self.feedback_n = force_n;
-                }
-                Action::Override { retreat_m } => {
-                    self.feedback_n = self.cfg.guard_max_force_n;
-                    self.target_m = Some(core::array::from_fn(|k| tool[k] + retreat_m[k]));
-                }
-            }
-        }
-        Ok(())
+        self.move_target(now_us, delta)
     }
 
     #[allow(clippy::cast_possible_truncation)]

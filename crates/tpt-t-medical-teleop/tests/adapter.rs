@@ -371,3 +371,201 @@ fn an_emergency_stop_command_latches_zero_torque_and_is_acknowledged_by_a_human(
     session.engage(SURGEON).expect("engage again");
     assert!(!session.adapter().is_latched());
 }
+
+#[test]
+fn autonomous_motion_moves_the_target_by_exactly_the_checked_displacement() {
+    // The displacement is already tool motion, so the notch and the 10:1 scaler
+    // must not touch it. A 1 mm step lands as 1 mm.
+    let mut a = adapter(far_grid());
+    a.update_joints(reading(0, HOME));
+    a.on_teleop_engage(SURGEON).expect("engage");
+    let start = a.target().expect("target");
+    a.on_autonomous_motion([0.001, 0.0, 0.0])
+        .expect("autonomous step");
+    let end = a.target().expect("target");
+    assert!((end[0] - start[0] - 0.001).abs() < 1e-12, "{end:?}");
+    assert!((end[1] - start[1]).abs() < 1e-12);
+    assert!((end[2] - start[2]).abs() < 1e-12);
+}
+
+#[test]
+fn autonomous_motion_is_refused_before_engage_and_while_latched() {
+    let mut a = adapter(far_grid());
+    a.update_joints(reading(0, HOME));
+    assert!(a.on_autonomous_motion([0.001, 0.0, 0.0]).is_err());
+    a.on_teleop_engage(SURGEON).expect("engage");
+    // Joint 1 at 0.9 rad swings the tool out of its box, which latches a stop.
+    a.update_joints(reading(2 * MS, [0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]));
+    a.tick(2 * MS);
+    assert!(a.is_latched());
+    assert!(a.on_autonomous_motion([0.001, 0.0, 0.0]).is_err());
+}
+
+#[test]
+fn autonomous_motion_into_a_structure_is_blocked_by_the_guard() {
+    // A ball whose surface is 2 mm beyond the tool, in the +x direction.
+    let mut a = adapter(workspace_grid([0.10, 0.0, TOOL_HOME[2]], 0.01));
+    a.update_joints(reading(0, HOME));
+    a.on_teleop_engage(SURGEON).expect("engage");
+    let before = a.target().expect("target");
+    a.on_autonomous_motion([0.005, 0.0, 0.0])
+        .expect("blocked is not an error");
+    assert_eq!(a.target(), Some(before));
+}
+
+#[test]
+fn a_non_finite_autonomous_displacement_is_refused() {
+    let mut a = adapter(far_grid());
+    a.update_joints(reading(0, HOME));
+    a.on_teleop_engage(SURGEON).expect("engage");
+    let before = a.target().expect("target");
+    assert!(a.on_autonomous_motion([f64::NAN, 0.0, 0.0]).is_err());
+    assert_eq!(a.target(), Some(before));
+}
+
+#[test]
+fn an_autonomous_session_drives_the_adapter_through_the_checked_path() {
+    use tpt_t_medical_ai_session::{Actor, Command, Mode, Proposal, Session, Verdict};
+    use tpt_t_medical_safety::Limits;
+
+    const SEC: u64 = 1_000 * MS;
+    const SURGEON_ID: u32 = 7;
+
+    // The session's envelope and timing match the adapter's workspace box.
+    let envelope =
+        Envelope::new(TOOL_HOME.map(|v| v - 0.05), TOOL_HOME.map(|v| v + 0.05)).expect("envelope");
+    let limits = Limits::new(envelope, 5.0, 2 * SEC).expect("limits");
+    let timing = tpt_t_medical_ai_session::Config::new(60 * SEC, 2 * SEC, SEC / 10, SEC / 2, 0.005)
+        .expect("config");
+    let mut session = Session::new(SURGEON_ID, limits, timing).expect("session");
+
+    let mut a = adapter(far_grid());
+    a.update_joints(reading(0, HOME));
+    a.on_teleop_engage(SURGEON).expect("engage");
+
+    session
+        .step(Actor::Surgeon(SURGEON_ID), Command::Reset, 0)
+        .expect("reset");
+    session
+        .step(Actor::Ai, Command::RequestAssistance, 0)
+        .expect("request");
+    session
+        .step(
+            Actor::Surgeon(SURGEON_ID),
+            Command::SetMode(Mode::FullAutonomy),
+            0,
+        )
+        .expect("mode");
+    session
+        .step(Actor::Surgeon(SURGEON_ID), Command::Engage, 0)
+        .expect("engage");
+
+    let start = a.target().expect("target");
+    let mut commanded = 0;
+    // One second of control at 1 kHz, with a 0.5 mm proposal every 200 ms.
+    for k in 1..=1_000_u64 {
+        let t = k * MS;
+        a.update_joints(reading(t, HOME));
+        a.tick(t);
+        if k % 200 == 0 {
+            let proposal = Proposal {
+                delta_m: [0.0005, 0.0, 0.0],
+                tool_position_m: a.tool_position().expect("tool"),
+                tool_force_n: [0.0; 3],
+                observed_delta_m: [0.0; 3],
+            };
+            let verdict = session
+                .step(Actor::Ai, Command::Propose(proposal), t)
+                .expect("proposal");
+            // Only a commanded motion moves the arm. The count below catches any other verdict.
+            if let Verdict::Commanded { delta_m } = verdict {
+                a.on_autonomous_motion(delta_m).expect("applied");
+                commanded += 1;
+            }
+        }
+    }
+
+    assert_eq!(commanded, 5);
+    assert!(!a.is_latched());
+    let end = a.target().expect("target");
+    assert!((end[0] - start[0] - 0.0025).abs() < 1e-9, "{end:?}");
+}
+
+#[test]
+fn a_command_sent_over_the_transport_moves_the_arm_target() {
+    use std::thread;
+    use std::time::{Duration, Instant};
+    use tpt_t_link::mux::UdpMux;
+    use tpt_t_medical_teleop::transport::{Arm, Operator};
+    use tpt_t_sec::{DeviceIdentity, Role, TrustStore};
+
+    let timeout = Duration::from_secs(2);
+    let base = Instant::now();
+    let elapsed_ns = || u64::try_from(base.elapsed().as_nanos()).unwrap_or(u64::MAX);
+
+    let operator_id = DeviceIdentity::generate(1, Role::Operator).expect("identity");
+    let arm_id = DeviceIdentity::generate(2, Role::Admin).expect("identity");
+    let mut operator_trust = TrustStore::new();
+    operator_trust.enroll(2, arm_id.public_key(), Role::Admin);
+    let mut arm_trust = TrustStore::new();
+    arm_trust.enroll(1, operator_id.public_key(), Role::Operator);
+
+    let arm_command = UdpMux::bind_loopback().expect("bind");
+    let arm_feed = UdpMux::bind_loopback().expect("bind");
+    let command_addr = arm_command.local_addr().expect("addr");
+    let feed_addr = arm_feed.local_addr().expect("addr");
+
+    let (mut operator, mut arm_end) = thread::scope(|s| {
+        let accepting = s.spawn(move || {
+            Arm::accept(
+                &arm_id,
+                &arm_trust,
+                arm_command,
+                arm_feed,
+                0,
+                timeout,
+                Duration::from_secs(1),
+            )
+            .expect("arm accepts")
+        });
+        let operator = Operator::connect(
+            &operator_id,
+            &operator_trust,
+            2,
+            command_addr,
+            feed_addr,
+            UdpMux::bind_loopback().expect("bind"),
+            UdpMux::bind_loopback().expect("bind"),
+            0,
+            timeout,
+        )
+        .expect("operator connects");
+        (operator, accepting.join().expect("arm thread"))
+    });
+
+    let mut a = adapter(far_grid());
+    a.update_joints(reading(0, HOME));
+    a.on_teleop_engage(SURGEON).expect("engage");
+    let start = a.target().expect("target");
+
+    // Lateral x at full scale, sent by the surgeon's side of the link.
+    let mut cmd = ControlCommand::zeroed(Mode::FullTeleop);
+    cmd.axes[4] = 1.0;
+    operator.send_command(cmd, elapsed_ns()).expect("send");
+
+    let deadline = Instant::now() + timeout;
+    let received = loop {
+        if let Some(cmd) = arm_end.recv_command().expect("recv") {
+            break cmd;
+        }
+        assert!(Instant::now() < deadline, "no command arrived");
+        thread::sleep(Duration::from_millis(1));
+    };
+    let received_us = elapsed_ns() / 1_000;
+    a.observe_link(received.timestamp_ns / 1_000, received_us);
+    a.on_control_command(received).expect("applied");
+
+    assert!(!a.is_latched());
+    let end = a.target().expect("target");
+    assert!(end[0] > start[0], "{start:?} -> {end:?}");
+}
