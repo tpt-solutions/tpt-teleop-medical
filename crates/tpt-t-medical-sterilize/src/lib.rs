@@ -5,6 +5,7 @@
 //! * Direct irradiance falls with the square of distance and with the cosine
 //!   of the angle of incidence. A surface in shadow gets none.
 //! * The dose delivered in a cycle is irradiance × time, in mJ/cm².
+//! * Surfaces can come from a `LiDAR` room map, see [`lidar`].
 //! * **Reflection is not credited.** The spec asks for reflectivity to be
 //!   considered, but an estimate of reflected dose is unreliable enough that
 //!   crediting it could hide an under-treated surface. Reflectance is recorded,
@@ -15,6 +16,8 @@
 //! the validator trusts only what was measured.
 
 #![forbid(unsafe_code)]
+
+pub mod lidar;
 
 /// A UV-C source, characterised by its irradiance at 1 m, normal incidence.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,6 +66,24 @@ impl Surface {
             reflectance,
             shadowed,
         })
+    }
+
+    /// Returns the distance from the lamp, in metres.
+    #[must_use]
+    pub const fn distance_m(&self) -> f64 {
+        self.distance_m
+    }
+
+    /// Returns the cosine of the angle of incidence, from 0 to 1.
+    #[must_use]
+    pub const fn cos_incidence(&self) -> f64 {
+        self.cos_incidence
+    }
+
+    /// Returns `true` if the lamp cannot see this surface.
+    #[must_use]
+    pub const fn is_shadowed(&self) -> bool {
+        self.shadowed
     }
 
     /// Returns the recorded reflectance. It is not used in the dose.
