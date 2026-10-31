@@ -25,7 +25,7 @@ logistics, automated pharmacy, and sterilization robotics.
 | `tpt-t-medical-pharmacy` | FEFO, cold chain, narcotic custody | Logic done |
 | `tpt-t-medical-sterilize` | UV-C dose planning, coverage check | Logic done; no LiDAR |
 | `tpt-t-medical-logistics` | Clean/dirty zones, elevator arbitration | Logic done; no path planning |
-| `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting | Parsers done; not wired to logistics or pharmacy |
+| `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting | Parsers and audit done; MedicationRequest wired to pharmacy; ADT not yet wired to logistics |
 | `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata | Parser done; no network services |
 | `tpt-t-medical-conformance` | Cross-bridge tests (test-only) | Done |
 
