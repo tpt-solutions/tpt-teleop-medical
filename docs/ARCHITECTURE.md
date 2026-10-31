@@ -21,7 +21,7 @@ gets a section here once it has an implementation.
 | Edge & perception | `tpt-t-medical-edge` | 1 kHz real-time arm control loop | Torque pipeline (force, gravity, friction, limits, hold-last) done; RT core pending |
 | | `tpt-t-medical-track` | Optical, EM and imaging tracking fusion, EKF | Kalman fusion and Horn registration done; nonlinear EKF and sensor validation pending |
 | Foundations | `tpt-t-medical-ring` | Wait-free SPSC ring buffer (MPSC deferred) | SPSC core done, loom-verified |
-| Telesurgery | `tpt-t-medical-teleop` | Adapter for the `tpt-teleop-domain-bridge` DTI | Adapter done against the DTI, with lifecycle, guard, safety and sensor feed; multi-site pending |
+| Telesurgery | `tpt-t-medical-teleop` | Adapter for the `tpt-teleop-domain-bridge` DTI | Adapter done against the DTI, with lifecycle, guard, safety, sensor feed, and two-site link quality; a real transport is pending |
 | Bridges | `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT and FHIR MedicationRequest ingestion | Both parsers, FHIR output, audit, and pharmacy and transport feeds done; other FHIR resources not implemented |
 | | `tpt-t-medical-bridge-dicom` | DICOM query/retrieve and SR export | Parser, C-ECHO/C-FIND/C-GET/C-STORE client and SR export done; pixel ingestion pending |
 | Tooling | `tpt-t-medical-sim` | Headless simulator with fault injection | Joint dynamics, fault injection, latency and jitter, tissue, tool position and AI fault scenarios done; haptic rendering and visualizer pending |
