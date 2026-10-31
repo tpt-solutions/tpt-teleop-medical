@@ -34,6 +34,13 @@ pub struct Limits {
 }
 
 impl Limits {
+    /// Returns the longest gap allowed between two evaluations, in
+    /// microseconds.
+    #[must_use]
+    pub const fn watchdog_timeout_us(&self) -> u64 {
+        self.watchdog_timeout_us
+    }
+
     /// Creates limits.
     ///
     /// Returns `None` if `max_force_n` is negative or not finite. A limit that
