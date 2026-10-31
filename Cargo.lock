@@ -961,6 +961,7 @@ dependencies = [
 name = "tpt-t-medical-visualizer"
 version = "1.0.0"
 dependencies = [
+ "tpt-t-medical-sim",
  "tpt-t-medical-surgical",
 ]
 
