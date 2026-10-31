@@ -1,19 +1,26 @@
 # tpt-t-medical-ai-session
 
-The AI controller for tpt-teleop-medical, as an assist-only operator. The AI can
-propose motion, and a surgeon decides whether it happens. The design is in
+The AI controller for tpt-teleop-medical. It is assist-only by default: the AI
+can propose motion, and a surgeon decides whether it happens. A surgeon can
+also opt a session into full autonomy. The design is in
 [docs/design/ai-session.md](../../docs/design/ai-session.md).
 
 ## Status
 
-Logic done. Wiring to the tpt-teleop domain interface, and a TMR vote on AI
-commands, are pending.
+Logic done, including the opt-in full-autonomy mode and a TMR-voted safety
+monitor. Autonomous motion is wired to the teleop adapter. The live tpt-teleop
+transport is pending.
 
 ## Rules
 
-1. **The AI can only propose.** A proposal is checked by the safety monitor and
+1. **Assist is the default.** A proposal is checked by the safety monitor and
    recorded as advice. It never moves the arm. The surgeon's command is the only
    motion source.
+1a. **Full autonomy is opt-in.** The surgeon chooses `Mode::FullAutonomy` with
+   `Command::SetMode` after a request and before engaging. Each engagement starts
+   in assist mode again. In this mode a checked proposal is
+   `Verdict::Commanded`, the motion the arm should make. The envelope, force,
+   contradiction and heartbeat checks still apply, and an override ends it.
 2. **Only the operating surgeon has authority.** The surgeon alone can engage,
    release, override, renew or reset. The AI and fleet dispatchers can only
    request assistance.
@@ -64,8 +71,12 @@ cargo test -p tpt-t-medical-ai-session
 
 - The actor identity is not authenticated here. The caller must do that, as the
   custody ledger does.
-- Not yet wired to the tpt-teleop domain interface.
-- No TMR vote on AI commands yet.
+- Autonomous motion reaches the arm through `Adapter::on_autonomous_motion` in
+  `tpt-t-medical-teleop`. The caller passes it each `Verdict::Commanded`. The
+  teleop transport carries surgeon commands only, so AI proposals do not cross the
+  network yet.
+- Each check runs through `tpt-t-medical-safety`'s `Tmr`, which is three copies
+  on one thread. Isolated cores are not yet built.
 
 ## Dependencies
 

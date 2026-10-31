@@ -338,16 +338,16 @@ mod tests {
     fn a_stopped_unit_is_reported_as_stopped_and_not_pending() {
         let f = fleet();
         let summary = f.summary();
-        assert!(summary.pending.is_empty());
+        assert_eq!(summary.pending, Vec::<u32>::new());
         assert_eq!(summary.stopped, vec![1, 2]);
-        assert!(summary.active.is_empty());
+        assert_eq!(summary.active, Vec::<u32>::new());
     }
 
     #[test]
     fn a_refused_request_is_not_queued() {
         let mut f = fleet();
         assert!(f.request_assistance(1, Actor::Ai, 0).is_err());
-        assert!(f.pending().is_empty());
+        assert_eq!(f.pending(), Vec::<u32>::new());
     }
 
     #[test]

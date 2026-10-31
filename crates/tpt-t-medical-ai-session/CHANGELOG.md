@@ -18,8 +18,15 @@ crate uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Fleet support: assistance requests only reach dispatchers, with one journal per
   unit.
 - AI reads of PHI go through the HIPAA consent gate, and logging is refused.
+- Opt-in full-autonomy mode. The surgeon sets it with `Command::SetMode` before
+  engaging. Each engagement starts in assist mode, and a checked proposal in
+  autonomy is `Verdict::Commanded`.
+- Every proposal is checked by `tpt-t-medical-safety`'s TMR voter, so all three
+  copies must agree.
 
 ### Known issues
 
-- Wiring to the tpt-teleop domain interface is pending.
-- A TMR vote on AI commands is pending.
+- The live tpt-teleop transport is not yet connected. Autonomous motion reaches
+  the adapter through `Adapter::on_autonomous_motion`, which skips the operator's
+  tremor filter and scaler.
+- The three TMR copies run on one thread, not on isolated cores.

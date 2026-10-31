@@ -2,10 +2,13 @@
 //!
 //! The recommendations in the design draft are the rules here:
 //!
-//! * The AI can only *propose* motion. A proposal is checked by the safety
-//!   monitor and then recorded as advice. It never moves the arm. The surgeon's
-//!   command is the only motion source, so assist mode gives the AI no motion
-//!   authority.
+//! * Assist is the default. In assist mode the AI can only *propose* motion. A
+//!   proposal is checked by the safety monitor and then recorded as advice. It
+//!   never moves the arm, and the surgeon's command is the only motion source.
+//! * Full autonomy is an opt-in mode. The surgeon chooses it before engaging,
+//!   and it lasts until the session leaves control. In that mode a checked
+//!   proposal is a [`Verdict::Commanded`] motion, still behind the same safety
+//!   checks. It is never less checked than assist mode.
 //! * Only the operating surgeon can engage, release, override, renew or reset.
 //!   The AI and fleet dispatchers can only request assistance.
 //! * A session expires unless a surgeon renews it. A missed heartbeat from the
@@ -25,7 +28,18 @@ pub mod audit;
 pub mod fleet;
 pub mod phi;
 
-use tpt_t_medical_safety::{Decision, EStopSource, Limits, Monitor, Sample, StopReason};
+use tpt_t_medical_safety::{Decision, EStopSource, Limits, Sample, StopReason, Tmr};
+
+/// How much motion authority the AI has while the surgeon is engaged.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Mode {
+    /// The AI proposes and the surgeon moves the arm. This is the default.
+    #[default]
+    Assist,
+    /// The AI's checked proposals are the commanded motion. Chosen by the
+    /// surgeon before engaging, and only then.
+    FullAutonomy,
+}
 
 /// Where the session is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,6 +87,9 @@ pub struct Proposal {
 pub enum Command {
     /// Ask a surgeon for help. Allowed for the AI and dispatchers.
     RequestAssistance,
+    /// Choose the motion authority for the next engagement. Surgeon only, and
+    /// only while a request is waiting. Defaults to [`Mode::Assist`].
+    SetMode(Mode),
     /// Take the request up. Surgeon only.
     Engage,
     /// Decline the request. Surgeon only.
@@ -101,11 +118,22 @@ pub enum Verdict {
         /// The state after.
         to: State,
     },
-    /// The proposal passed the checks. It is advice, and the arm does not move
-    /// because of it.
+    /// The proposal passed the checks in assist mode. It is advice, and the arm
+    /// does not move because of it.
     Advised {
         /// The advised displacement, in metres.
         delta_m: [f64; 3],
+    },
+    /// The proposal passed the checks in full-autonomy mode. This is the motion
+    /// the arm should make. The caller applies it through the adapter.
+    Commanded {
+        /// The commanded displacement, in metres.
+        delta_m: [f64; 3],
+    },
+    /// The surgeon chose the motion authority for the next engagement.
+    ModeSet {
+        /// The chosen mode.
+        mode: Mode,
     },
     /// The session lifetime was extended to this time.
     Renewed {
@@ -177,7 +205,8 @@ pub struct Session {
     surgeon: u32,
     config: Config,
     state: State,
-    monitor: Monitor,
+    mode: Mode,
+    monitor: Tmr,
     expires_us: u64,
     handover_done_us: u64,
     last_proposal_us: u64,
@@ -198,12 +227,13 @@ impl Session {
         if config.heartbeat_us > limits.watchdog_timeout_us() {
             return None;
         }
-        let mut monitor = Monitor::new(limits);
+        let mut monitor = Tmr::new(limits);
         monitor.emergency_stop(EStopSource::Automatic);
         Some(Self {
             surgeon,
             config,
             state: State::EmergencyStop,
+            mode: Mode::Assist,
             monitor,
             expires_us: 0,
             handover_done_us: 0,
@@ -227,6 +257,12 @@ impl Session {
     #[must_use]
     pub const fn latched(&self) -> Option<StopReason> {
         self.monitor.latched()
+    }
+
+    /// Returns the motion authority the surgeon chose for this engagement.
+    #[must_use]
+    pub const fn mode(&self) -> Mode {
+        self.mode
     }
 
     /// Applies one command at `now_us`.
@@ -259,7 +295,16 @@ impl Session {
                     return Err(Refusal::NotPermitted);
                 }
                 self.require(State::Autonomous)?;
+                // Every engagement starts in assist mode. Autonomy has to be
+                // chosen again for each one.
+                self.mode = Mode::Assist;
                 Ok(self.move_to(State::RequestingTeleop))
+            }
+            Command::SetMode(mode) => {
+                self.require_surgeon(actor)?;
+                self.require(State::RequestingTeleop)?;
+                self.mode = mode;
+                Ok(Verdict::ModeSet { mode })
             }
             Command::Engage => {
                 self.require_surgeon(actor)?;
@@ -348,7 +393,7 @@ impl Session {
         // Check the proposal as if the arm were already at the predicted point.
         // The monitor is copied first, so a clean proposal leaves it as it was.
         let predicted = [0, 1, 2].map(|i| p.tool_position_m[i] + p.delta_m[i]);
-        let mut trial = self.monitor;
+        let mut trial = self.monitor.clone();
         let sample = Sample {
             now_us,
             tool_position_m: predicted,
@@ -360,7 +405,10 @@ impl Session {
         }
         self.monitor = trial;
         self.last_proposal_us = now_us;
-        Verdict::Advised { delta_m: p.delta_m }
+        match self.mode {
+            Mode::Assist => Verdict::Advised { delta_m: p.delta_m },
+            Mode::FullAutonomy => Verdict::Commanded { delta_m: p.delta_m },
+        }
     }
 
     fn fault(&mut self, reason: StopReason) -> Verdict {
@@ -741,5 +789,142 @@ mod tests {
         assert!(Config::new(1, 1, 1, 1, f64::NAN).is_none());
         let slow = Config::new(60 * SEC, 2 * SEC, SEC / 10, 3 * SEC, 0.005).expect("config");
         assert!(Session::new(SURGEON, limits(), slow).is_none());
+    }
+
+    /// A requested session, waiting for the surgeon to choose a mode and engage.
+    fn requested(t: u64) -> Session {
+        let mut s = Session::new(SURGEON, limits(), config()).expect("session");
+        s.step(Actor::Surgeon(SURGEON), Command::Reset, t)
+            .expect("reset");
+        s.step(Actor::Ai, Command::RequestAssistance, t)
+            .expect("request");
+        s
+    }
+
+    #[test]
+    fn a_session_is_assist_only_unless_the_surgeon_chooses_otherwise() {
+        assert_eq!(engaged(0).mode(), Mode::Assist);
+        assert_eq!(
+            Session::new(SURGEON, limits(), config())
+                .expect("session")
+                .mode(),
+            Mode::Assist
+        );
+    }
+
+    #[test]
+    fn only_the_surgeon_chooses_autonomy_and_only_before_engaging() {
+        let mut s = requested(0);
+        assert_eq!(
+            s.step(Actor::Ai, Command::SetMode(Mode::FullAutonomy), 0),
+            Err(Refusal::NotPermitted)
+        );
+        assert_eq!(
+            s.step(Actor::Surgeon(8), Command::SetMode(Mode::FullAutonomy), 0),
+            Err(Refusal::NotPermitted)
+        );
+        assert_eq!(
+            s.step(
+                Actor::Surgeon(SURGEON),
+                Command::SetMode(Mode::FullAutonomy),
+                0
+            ),
+            Ok(Verdict::ModeSet {
+                mode: Mode::FullAutonomy
+            })
+        );
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 0)
+            .expect("engage");
+        assert_eq!(
+            s.step(Actor::Surgeon(SURGEON), Command::SetMode(Mode::Assist), SEC),
+            Err(Refusal::WrongState(State::TeleopActive))
+        );
+        assert_eq!(s.mode(), Mode::FullAutonomy);
+    }
+
+    #[test]
+    fn autonomy_turns_a_checked_proposal_into_commanded_motion() {
+        let mut s = requested(0);
+        s.step(
+            Actor::Surgeon(SURGEON),
+            Command::SetMode(Mode::FullAutonomy),
+            0,
+        )
+        .expect("mode");
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 0)
+            .expect("engage");
+        let verdict = s.step(
+            Actor::Ai,
+            Command::Propose(proposal([0.001, 0.0, 0.0])),
+            SEC,
+        );
+        assert_eq!(
+            verdict,
+            Ok(Verdict::Commanded {
+                delta_m: [0.001, 0.0, 0.0]
+            })
+        );
+    }
+
+    #[test]
+    fn autonomy_is_still_behind_the_envelope_and_the_contradiction_check() {
+        let mut s = requested(0);
+        s.step(
+            Actor::Surgeon(SURGEON),
+            Command::SetMode(Mode::FullAutonomy),
+            0,
+        )
+        .expect("mode");
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 0)
+            .expect("engage");
+        let outside = s.step(Actor::Ai, Command::Propose(proposal([0.2, 0.0, 0.0])), SEC);
+        assert_eq!(outside, Ok(Verdict::Faulted(StopReason::OutsideEnvelope)));
+        assert_eq!(s.state(), State::EmergencyStop);
+    }
+
+    #[test]
+    fn autonomy_ends_with_the_engagement_and_the_next_one_starts_in_assist() {
+        let mut s = requested(0);
+        s.step(
+            Actor::Surgeon(SURGEON),
+            Command::SetMode(Mode::FullAutonomy),
+            0,
+        )
+        .expect("mode");
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 0)
+            .expect("engage");
+        s.step(Actor::Surgeon(SURGEON), Command::Override, SEC)
+            .expect("override");
+        assert_eq!(s.state(), State::Autonomous);
+        s.step(Actor::Ai, Command::RequestAssistance, 2 * SEC)
+            .expect("request");
+        assert_eq!(s.mode(), Mode::Assist);
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 2 * SEC)
+            .expect("engage");
+        let verdict = s.step(
+            Actor::Ai,
+            Command::Propose(proposal([0.001, 0.0, 0.0])),
+            3 * SEC,
+        );
+        assert!(
+            matches!(verdict, Ok(Verdict::Advised { .. })),
+            "{verdict:?}"
+        );
+    }
+
+    #[test]
+    fn a_surgeon_override_ends_autonomy_at_once() {
+        let mut s = requested(0);
+        s.step(
+            Actor::Surgeon(SURGEON),
+            Command::SetMode(Mode::FullAutonomy),
+            0,
+        )
+        .expect("mode");
+        s.step(Actor::Surgeon(SURGEON), Command::Engage, 0)
+            .expect("engage");
+        let verdict = s.step(Actor::Surgeon(SURGEON), Command::Override, SEC);
+        assert!(matches!(verdict, Ok(Verdict::Transitioned { .. })));
+        assert_eq!(s.state(), State::Autonomous);
     }
 }
