@@ -16,12 +16,15 @@
 //! * [`tool_position`]: the tool's position from the joint readings, using the
 //!   arm's kinematics.
 //!
-//! Not yet modelled: haptic force rendering and the visualizer. The
-//! visualizer is a GUI and is not started. Haptic rendering needs the haptic
-//! device model, which is not in the spec.
+//! * [`haptic::HapticRig`]: contact force rendered against a surface. The device
+//!   model is the impedance model of `tpt-t-medical-haptic`, because the spec
+//!   names no haptic device. It is a stand-in, not a device characterisation.
+//!
+//! Not yet modelled: the visualizer. It is a GUI and is not started.
 
 #![forbid(unsafe_code)]
 
+pub mod haptic;
 pub mod joint;
 pub mod link;
 pub mod tissue;

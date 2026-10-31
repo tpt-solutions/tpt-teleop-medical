@@ -6,7 +6,7 @@ jitter, a mass-spring tissue, and the tool's position from the joint readings.
 
 ## Status
 
-Headless core done. Haptic force rendering and the visualizer are not modelled.
+Headless core and haptic force rendering (`haptic`) done. The visualizer is not modelled.
 
 ## Overview
 
@@ -47,7 +47,7 @@ development-only dependencies.
 
 ## Limitations
 
-- No haptic rendering. The spec does not define a haptic device model.
+- The haptic device is modelled by the impedance contact of `tpt-t-medical-haptic`. The spec defines no device, so this is a stand-in.
 - No visualizer. The GUI is in a separate crate that is not started.
 - The model is a simplified joint model. It has not been identified against a
   physical arm.

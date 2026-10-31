@@ -12,6 +12,8 @@ keywords = ["simulation", "fault-injection", "robotics"]
 categories = ["simulation", "science::robotics"]
 
 [dependencies]
+tpt-t-medical-haptic = { path = "../tpt-t-medical-haptic" }
+tpt-t-medical-ring = { path = "../tpt-t-medical-ring" }
 tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
 
 [dev-dependencies]

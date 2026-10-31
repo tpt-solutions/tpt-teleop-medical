@@ -919,6 +919,8 @@ version = "1.0.0"
 dependencies = [
  "tpt-t-medical-ai-session",
  "tpt-t-medical-compliance",
+ "tpt-t-medical-haptic",
+ "tpt-t-medical-ring",
  "tpt-t-medical-safety",
  "tpt-t-medical-surgical",
 ]
@@ -937,6 +939,7 @@ version = "1.0.0"
 dependencies = [
  "tpt-t-core",
  "tpt-t-domain-bridge",
+ "tpt-t-medical-compliance",
  "tpt-t-medical-edge",
  "tpt-t-medical-safety",
  "tpt-t-medical-surgical",
