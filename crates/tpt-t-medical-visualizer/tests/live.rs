@@ -65,3 +65,42 @@ fn a_running_simulation_reaches_the_screen_through_the_feed() {
     assert!(page.contains("mid-run checkpoint"));
     assert!(page.len() > 1_000);
 }
+
+#[test]
+fn the_live_page_reloads_and_shows_newer_motion() {
+    let arm = Arm::reference();
+    let params = [JointParams::new(0.5, 0.2, 0.0, 0.0, 0.0).expect("params"); JOINTS];
+    let mut sim = Simulator::new(params, [0.0; JOINTS]);
+    let mut feed = Feed::new(1_000, 4).expect("feed");
+
+    for _ in 0..100 {
+        let readings = sim.step(Some([0.4; JOINTS]));
+        feed.push_frame(Frame {
+            at_us: readings.time_us,
+            tool_m: tool_position(&arm, &readings),
+            force_n: [0.0; 3],
+            tmr: [Copy3::Agree; 3],
+        });
+    }
+    let first = feed.live_page(800, 600, 1);
+    assert!(first.contains("<meta http-equiv=\"refresh\" content=\"1\">"));
+
+    for _ in 0..100 {
+        let readings = sim.step(Some([0.4; JOINTS]));
+        feed.push_frame(Frame {
+            at_us: readings.time_us,
+            tool_m: tool_position(&arm, &readings),
+            force_n: [0.0; 3],
+            tmr: [Copy3::Agree; 3],
+        });
+    }
+    let later = feed.live_page(800, 600, 1);
+    assert_ne!(first, later, "a regenerated page reflects the newer motion");
+}
+
+#[test]
+fn an_empty_feed_still_renders_a_valid_live_page() {
+    let page = Feed::new(4, 4).expect("feed").live_page(800, 600, 1);
+    assert!(page.starts_with("<!doctype html>"));
+    assert!(page.contains("http-equiv=\"refresh\""));
+}

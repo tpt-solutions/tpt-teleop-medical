@@ -11,7 +11,8 @@
 
 use std::collections::VecDeque;
 
-use crate::scene::{Copy3, Event, Force, Scene};
+use crate::html;
+use crate::scene::{Copy3, Event, Force, Scene, fit};
 
 /// One control tick, as the running system reports it.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -88,6 +89,19 @@ impl Feed {
     #[must_use]
     pub fn frames(&self) -> usize {
         self.frames.len()
+    }
+
+    /// Renders the current snapshot as a page that reloads every `refresh_secs`
+    /// seconds. Calling it again after new frames shows the newer state.
+    #[must_use]
+    pub fn live_page(&self, width_px: u32, height_px: u32, refresh_secs: u32) -> String {
+        let scene = self.snapshot();
+        let view = fit(
+            &scene.trajectory_m,
+            f64::from(width_px),
+            f64::from(height_px),
+        );
+        html::render_live(&scene, &view, width_px, height_px, refresh_secs)
     }
 
     /// Builds the scene from the buffered history.

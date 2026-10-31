@@ -57,6 +57,22 @@ pub fn render(scene: &Scene, view: &View, width_px: u32, height_px: u32) -> Stri
     out
 }
 
+/// Renders the scene as a live page. The page reloads itself every
+/// `refresh_secs` seconds, so a feed that is regenerated shows up without a
+/// window toolkit. The page is [`render`] with a refresh tag added to its head.
+#[must_use]
+pub fn render_live(
+    scene: &Scene,
+    view: &View,
+    width_px: u32,
+    height_px: u32,
+    refresh_secs: u32,
+) -> String {
+    const CHARSET: &str = "<meta charset=\"utf-8\">\n";
+    let refresh = format!("<meta http-equiv=\"refresh\" content=\"{refresh_secs}\">\n");
+    render(scene, view, width_px, height_px).replacen(CHARSET, &format!("{CHARSET}{refresh}"), 1)
+}
+
 /// The scene and view as one JavaScript object literal.
 fn data_json(scene: &Scene, view: &View) -> String {
     let mut s = String::from("{");

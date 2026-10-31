@@ -8,7 +8,7 @@ authors.workspace = true
 readme = "README.md"
 publish = false
 description = "Operator visualizer model: trajectory, workspace envelope, fixture boundary, force vectors, audit timeline and TMR state, with a projection (window in tpt-t-medical-visualizer-app)"
-keywords = ["visualizer", "egui", "robotics"]
+keywords = ["visualizer", "html", "robotics"]
 categories = ["visualization", "science::robotics"]
 
 [dependencies]
