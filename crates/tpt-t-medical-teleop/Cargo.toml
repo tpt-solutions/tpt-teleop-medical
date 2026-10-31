@@ -1,0 +1,21 @@
+[package]
+name = "tpt-t-medical-teleop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Telesurgery adapter: implements the tpt-teleop Domain Teleoperation Interface for the surgical arm (tpt-t-domain-bridge, spec §4.6)"
+keywords = ["teleoperation", "surgery", "adapter"]
+categories = ["science::robotics"]
+
+[dependencies]
+tpt-t-core = { path = "../../../tpt-teleop/crates/tpt-t-core" }
+tpt-t-domain-bridge = { path = "../../../tpt-teleop/crates/tpt-t-domain-bridge" }
+tpt-t-medical-edge = { path = "../tpt-t-medical-edge" }
+tpt-t-medical-safety = { path = "../tpt-t-medical-safety" }
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+
+[lints]
+workspace = true
