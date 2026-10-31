@@ -18,6 +18,7 @@
 //! The axis mapping is a decision, not from the spec: roll, pitch and yaw are
 //! ignored, because orientation is not part of this 3-DOF force model.
 
+use crate::link::{LinkMonitor, LinkState};
 use tpt_t_core::ser::ControlCommand;
 use tpt_t_domain_bridge::{
     DomainError, DomainState, DomainTeleopInterface, HapticFeedback, OperatorId, Result,
@@ -112,6 +113,7 @@ pub struct Adapter<A: Actuators> {
     operator: Option<OperatorId>,
     ramp_left: u32,
     latched: bool,
+    link: LinkMonitor,
     fault_flags: u32,
     frames: Vec<VideoFrame>,
     battery_pct: f32,
@@ -161,6 +163,7 @@ impl<A: Actuators> Adapter<A> {
             operator: None,
             ramp_left: 0,
             latched: false,
+            link: LinkMonitor::new(),
             fault_flags: 0,
             frames: Vec::new(),
             battery_pct: 100.0,
@@ -169,6 +172,23 @@ impl<A: Actuators> Adapter<A> {
             actuators,
             cfg,
         })
+    }
+
+    /// Records one command's one-way delay from the network transport. A lost
+    /// link latches the adapter, as a sensor fault does. A degraded link does
+    /// not stop motion, and the caller should warn the surgeon.
+    pub fn observe_link(&mut self, sent_us: u64, received_us: u64) -> LinkState {
+        let state = self.link.observe(sent_us, received_us);
+        if state == LinkState::Lost {
+            self.trip(FAULT_SENSOR);
+        }
+        state
+    }
+
+    /// Returns the link state at `now_us`.
+    #[must_use]
+    pub fn link_state(&self, now_us: u64) -> LinkState {
+        self.link.state_at(now_us)
     }
 
     /// Records a joint reading from the arm's sensors.
@@ -233,6 +253,12 @@ impl<A: Actuators> Adapter<A> {
     pub fn tick(&mut self, now_us: u64) -> [f64; JOINTS] {
         self.clock_us = self.clock_us.max(now_us);
         if self.latched {
+            return self.hold_zero();
+        }
+        // Once a transport reports, silence past the horizon is a lost link. A
+        // deployment without a transport never reports, so it is not checked.
+        if self.link.samples() > 0 && self.link.state_at(now_us) == LinkState::Lost {
+            self.trip(FAULT_SENSOR);
             return self.hold_zero();
         }
         let Some(j) = self.joints else {
@@ -384,8 +410,18 @@ impl<A: Actuators> DomainTeleopInterface for Adapter<A> {
         if let Some(target) = self.target_m {
             match action {
                 Action::Follow { delta_m, force_n } => {
-                    self.feedback_n = force_n;
-                    self.target_m = Some(core::array::from_fn(|k| target[k] + delta_m[k]));
+                    // The guard checks the measured tool. The target is where the
+                    // arm is commanded, and it can lead the tool, so it is checked
+                    // as well. A lagging tool must not let the target into a structure.
+                    let next: [f64; 3] = core::array::from_fn(|k| target[k] + delta_m[k]);
+                    if self.cfg.sdf.distance(next).is_some_and(|d| d >= 0.0) {
+                        self.feedback_n = force_n;
+                        self.target_m = Some(next);
+                    } else {
+                        // Not applied. Full feedback, as the guard gives for an
+                        // unknown position.
+                        self.feedback_n = self.cfg.guard_max_force_n;
+                    }
                 }
                 Action::Blocked { force_n } => {
                     // The motion would enter the structure. It is not applied, and

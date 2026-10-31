@@ -11,5 +11,6 @@
 #![forbid(unsafe_code)]
 
 pub mod adapter;
+pub mod link;
 
 pub use adapter::{Actuators, Adapter, Config, JointReading};
