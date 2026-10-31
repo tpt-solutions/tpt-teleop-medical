@@ -4,6 +4,9 @@
 //! certify the real-time target. The tests are ignored by default. Run them
 //! with `cargo test --release -p tpt-t-medical-surgical --test budgets -- --ignored`.
 
+// Generated test inputs are small and bounded, so the lossy casts are intended.
+#![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+
 use std::time::{Duration, Instant};
 
 use tpt_t_medical_surgical::notch::NotchFilter;

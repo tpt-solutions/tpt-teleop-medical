@@ -72,7 +72,7 @@ fn mutated_valid_messages_never_panic() {
     for seed in 0..SEEDS {
         let mut rng = Rng::new(seed);
         let mut bytes = VALID.to_vec();
-        for _ in 0..(1 + rng.below(8)) {
+        for _ in 0..=rng.below(8) {
             let at = rng.below(bytes.len());
             match rng.below(3) {
                 0 => bytes[at] = rng.byte(),

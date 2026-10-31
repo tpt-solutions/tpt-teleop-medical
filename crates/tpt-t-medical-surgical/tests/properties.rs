@@ -1,6 +1,9 @@
 //! Property checks for the tremor notch filter and the SDF lookup (spec.txt
 //! §4.3, §4.5). Cases are seeded, so every run covers the same inputs.
 
+// Generated test inputs are small and bounded, so the lossy casts are intended.
+#![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+
 use tpt_t_medical_surgical::notch::NotchFilter;
 use tpt_t_medical_surgical::sdf::SdfGrid;
 
