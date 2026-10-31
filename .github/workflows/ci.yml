@@ -23,7 +23,7 @@ jobs:
       # tpt-t-medical-teleop depends on tpt-teleop by relative path (../../../tpt-teleop),
       # so the sibling repo must sit next to this checkout.
       - name: Fetch sibling tpt-teleop repo
-        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD
+        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD && test -f ../tpt-teleop/crates/tpt-t-core/Cargo.toml
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch sibling tpt-teleop repo
-        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD
+        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD && test -f ../tpt-teleop/crates/tpt-t-core/Cargo.toml
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch sibling tpt-teleop repo
-        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD
+        run: git init -q ../tpt-teleop && git -C ../tpt-teleop fetch -q --depth 1 https://github.com/tpt-solutions/tpt-teleop.git 3cbf38b30f65d3381f83694ef0e6ac5ac807e9bd && git -C ../tpt-teleop checkout -q FETCH_HEAD && test -f ../tpt-teleop/crates/tpt-t-core/Cargo.toml
 
       - name: Install nightly Miri
         uses: dtolnay/rust-toolchain@master

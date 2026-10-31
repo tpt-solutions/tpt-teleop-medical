@@ -307,7 +307,7 @@ mod tests {
         let d = disparity(&left, &right, &m).expect("disparity");
         let k = Intrinsics::new(500.0, 500.0, 40.0, 20.0).expect("intrinsics");
         let cloud = point_cloud(&d, &k, 0.004);
-        assert!(!cloud.is_empty());
+        assert_ne!(cloud.len(), 0);
         // Every point is in front of the camera, at the depth of disparity 6.
         let expected_z = 500.0 * 0.004 / 6.0;
         assert!(cloud.iter().all(|p| (p[2] - expected_z).abs() < 0.05));
