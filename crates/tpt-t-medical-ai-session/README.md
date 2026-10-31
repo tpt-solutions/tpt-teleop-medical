@@ -51,7 +51,7 @@ the operator's motion, and rate.
 | `Verdict`, `Refusal` | root | The outcome of a command, and why it was refused |
 | `Config` | root | Session configuration, passed to `Session` |
 | `SessionAudit` | `audit` | Journals every command for one unit |
-| `Fleet` | `fleet` | Several units, each with its own journal. `add`, `tick_all`, `request_assistance`, `unit`, `unit_ids`. |
+| `Fleet` | `fleet` | Several units, each with its own journal. `add`, `tick_all`, `request_assistance`, `unit`, `unit_ids`, `pending` (FIFO queue of units awaiting a surgeon), `summary`. |
 | `read_for_ai` | `phi` | The only route by which the AI reads patient data. It goes through the HIPAA consent gate, and logging is refused. |
 
 ## Testing

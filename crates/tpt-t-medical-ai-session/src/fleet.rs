@@ -34,15 +34,32 @@ impl fmt::Display for FleetError {
 
 impl std::error::Error for FleetError {}
 
+/// A fleet-wide view for the dispatcher. It is read-only.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Summary {
+    /// Units waiting for a surgeon, oldest request first.
+    pub pending: Vec<u32>,
+    /// Units a surgeon is operating.
+    pub active: Vec<u32>,
+    /// Units stopped and latched, waiting for a surgeon's reset.
+    pub stopped: Vec<u32>,
+    /// Every unit in the fleet.
+    pub total: usize,
+}
+
 /// The sessions of several units, keyed by unit identifier.
 pub struct Fleet<S: Storage, G: Signer> {
     units: BTreeMap<u32, SessionAudit<S, G>>,
+    /// When each unit's assistance was last requested, in microseconds. Orders
+    /// the queue for surgeon attention.
+    requested_at: BTreeMap<u32, u64>,
 }
 
 impl<S: Storage, G: Signer> fmt::Debug for Fleet<S, G> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Fleet")
             .field("units", &self.units.keys().collect::<Vec<_>>())
+            .field("requested_at", &self.requested_at)
             .finish()
     }
 }
@@ -59,6 +76,7 @@ impl<S: Storage, G: Signer> Fleet<S, G> {
     pub const fn new() -> Self {
         Self {
             units: BTreeMap::new(),
+            requested_at: BTreeMap::new(),
         }
     }
 
@@ -119,9 +137,49 @@ impl<S: Storage, G: Signer> Fleet<S, G> {
             .units
             .get_mut(&unit)
             .ok_or(FleetError::UnknownUnit(unit))?;
-        audit
+        let verdict = audit
             .handle(by, Command::RequestAssistance, now_us)
-            .map_err(FleetError::Unit)
+            .map_err(FleetError::Unit)?;
+        self.requested_at.insert(unit, now_us);
+        Ok(verdict)
+    }
+
+    /// Returns the units waiting for a surgeon, oldest request first. Ties are
+    /// broken by unit identifier, so the order is the same on every call.
+    ///
+    /// A unit leaves this list as soon as its surgeon engages or refuses, or
+    /// the request expires. The list is derived from each unit's state, so it
+    /// cannot disagree with the sessions.
+    #[must_use]
+    pub fn pending(&self) -> Vec<u32> {
+        let mut waiting: Vec<(u64, u32)> = self
+            .units
+            .iter()
+            .filter(|(_, audit)| audit.state() == State::RequestingTeleop)
+            .map(|(&id, _)| (self.requested_at.get(&id).copied().unwrap_or(0), id))
+            .collect();
+        waiting.sort_unstable();
+        waiting.into_iter().map(|(_, id)| id).collect()
+    }
+
+    /// Returns a read-only summary for the dispatcher.
+    #[must_use]
+    pub fn summary(&self) -> Summary {
+        let mut active = Vec::new();
+        let mut stopped = Vec::new();
+        for (&id, audit) in &self.units {
+            match audit.state() {
+                State::TeleopActive => active.push(id),
+                State::EmergencyStop => stopped.push(id),
+                _ => {}
+            }
+        }
+        Summary {
+            pending: self.pending(),
+            active,
+            stopped,
+            total: self.units.len(),
+        }
     }
 
     /// Advances every unit's clock. Stops at the first journal failure, and
@@ -244,6 +302,52 @@ mod tests {
             Err(FleetError::Unit(AuditError::Refused(_)))
         ));
         assert_eq!(f.state(1), Some(State::EmergencyStop));
+    }
+
+    #[test]
+    fn pending_lists_units_oldest_request_first() {
+        let mut f = fleet();
+        reset(&mut f, 1, 70);
+        reset(&mut f, 2, 71);
+        f.request_assistance(2, Actor::Ai, 5).expect("request 2");
+        f.request_assistance(1, Actor::Dispatcher(9), 10)
+            .expect("request 1");
+        assert_eq!(f.pending(), vec![2, 1]);
+    }
+
+    #[test]
+    fn a_unit_leaves_the_queue_when_its_surgeon_engages_it() {
+        let mut f = fleet();
+        reset(&mut f, 1, 70);
+        reset(&mut f, 2, 71);
+        f.request_assistance(2, Actor::Ai, 5).expect("request 2");
+        f.request_assistance(1, Actor::Ai, 10).expect("request 1");
+        f.units
+            .get_mut(&2)
+            .expect("unit 2")
+            .handle(Actor::Surgeon(71), Command::Engage, 11)
+            .expect("engage");
+        assert_eq!(f.pending(), vec![1]);
+        let summary = f.summary();
+        assert_eq!(summary.active, vec![2]);
+        assert_eq!(summary.pending, vec![1]);
+        assert_eq!(summary.total, 2);
+    }
+
+    #[test]
+    fn a_stopped_unit_is_reported_as_stopped_and_not_pending() {
+        let f = fleet();
+        let summary = f.summary();
+        assert!(summary.pending.is_empty());
+        assert_eq!(summary.stopped, vec![1, 2]);
+        assert!(summary.active.is_empty());
+    }
+
+    #[test]
+    fn a_refused_request_is_not_queued() {
+        let mut f = fleet();
+        assert!(f.request_assistance(1, Actor::Ai, 0).is_err());
+        assert!(f.pending().is_empty());
     }
 
     #[test]
