@@ -79,7 +79,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 7 — Developer Experience & Simulation
 
 - [ ] `tpt-t-medical-sim` *(joint dynamics, fault injection, command latency and jitter, tool kinematics and mass-spring tissue done; haptic rendering done, visualizer pending)* — headless simulator: 7-DOF arm kinematics (gravity/friction/backlash), tissue deformation (mass-spring or FEM), haptic force rendering, network latency/jitter injection, fault injection (sensor failure, motor stall, network drop), 10x real-time execution
-- [ ] Visualizer binary *(scene model, projection and a self-contained HTML export done and tested; an egui window was dropped because its dependency tree includes Apache-2.0-only crates, which `deny.toml` bans; a live feed from the running system is pending)* — 3D arm trajectory + workspace envelope, virtual-fixture no-fly-zone boundaries, haptic force vectors, audit-trail timeline, TMR agreement/disagreement indicators
+- [ ] Visualizer binary *(scene model, projection and a self-contained HTML export done and tested; an egui window was dropped because its dependency tree includes Apache-2.0-only crates, which `deny.toml` bans; a live feed from the running system is in `feed` and driven by the simulator in `tests/live.rs`; the egui window itself is not started)* — 3D arm trajectory + workspace envelope, virtual-fixture no-fly-zone boundaries, haptic force vectors, audit-trail timeline, TMR agreement/disagreement indicators
 
 ## Phase 8 — Regulatory & Compliance Documentation Scaffolding
 
