@@ -7,7 +7,7 @@ use std::io;
 use std::rc::Rc;
 
 use tpt_t_medical_ai_session::audit::SessionAudit;
-use tpt_t_medical_ai_session::{Actor, Command, Config, Proposal, Session, State, Verdict};
+use tpt_t_medical_ai_session::{Actor, Command, Config, Mode, Proposal, Session, State, Verdict};
 use tpt_t_medical_compliance::Storage;
 use tpt_t_medical_compliance::ed25519::Ed25519Signer;
 use tpt_t_medical_safety::{EStopSource, Envelope, Limits, StopReason};
@@ -168,4 +168,65 @@ fn a_latched_fault_stays_latched_until_the_surgeon_resets() {
         .handle(Actor::Surgeon(SURGEON), Command::Reset, 3 * SEC)
         .expect("surgeon reset");
     assert_eq!(audit.state(), State::Autonomous);
+}
+
+/// Brings a latched session to `TeleopActive` in full-autonomy mode.
+fn engage_autonomous(audit: &mut SessionAudit<Store, Ed25519Signer>, now_us: u64) {
+    audit
+        .handle(Actor::Surgeon(SURGEON), Command::Reset, now_us)
+        .expect("reset");
+    audit
+        .handle(Actor::Ai, Command::RequestAssistance, now_us)
+        .expect("request");
+    audit
+        .handle(
+            Actor::Surgeon(SURGEON),
+            Command::SetMode(Mode::FullAutonomy),
+            now_us,
+        )
+        .expect("mode");
+    audit
+        .handle(Actor::Surgeon(SURGEON), Command::Engage, now_us)
+        .expect("engage");
+}
+
+#[test]
+fn an_autonomous_ai_moves_the_arm_within_the_envelope() {
+    let (mut sim, tool) = arm_at_rest();
+    let mut audit = audit(session_around(tool));
+    engage_autonomous(&mut audit, 0);
+    let mut now = 0;
+    let mut commanded = Vec::new();
+    while now < 3 * SEC {
+        now += SEC / 5;
+        for _ in 0..(SEC / 5 / STEP_US) {
+            sim.step(Some([0.0; JOINTS]));
+        }
+        let p = proposal(&mut sim, tool, [0.0005, 0.0, 0.0], [0.0; 3]);
+        let verdict = audit
+            .handle(Actor::Ai, Command::Propose(p), now)
+            .expect("commanded");
+        commanded.push(verdict);
+    }
+    assert!(
+        commanded
+            .iter()
+            .all(|v| matches!(v, Verdict::Commanded { .. })),
+        "{commanded:?}"
+    );
+    assert_eq!(audit.state(), State::TeleopActive);
+    assert_eq!(audit.session().mode(), Mode::FullAutonomy);
+}
+
+#[test]
+fn a_runaway_autonomous_ai_is_stopped_before_it_leaves_the_envelope() {
+    let (mut sim, tool) = arm_at_rest();
+    let mut audit = audit(session_around(tool));
+    engage_autonomous(&mut audit, 0);
+    let p = proposal(&mut sim, tool, [0.2, 0.0, 0.0], [0.0; 3]);
+    let verdict = audit
+        .handle(Actor::Ai, Command::Propose(p), SEC)
+        .expect("applied");
+    assert_eq!(verdict, Verdict::Faulted(StopReason::OutsideEnvelope));
+    assert_eq!(audit.state(), State::EmergencyStop);
 }

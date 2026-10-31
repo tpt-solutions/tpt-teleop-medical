@@ -16,6 +16,8 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Deterministic command latency and jitter.
 - A mass-spring tissue model, and tool position from the joint readings.
 - An integration test of five AI fault scenarios against `tpt-t-medical-ai-session`.
+- Fleet scenarios: a silent AI on one unit stops only that unit, and the dispatcher
+  cannot clear a latched stop.
 
 ### Known issues
 
