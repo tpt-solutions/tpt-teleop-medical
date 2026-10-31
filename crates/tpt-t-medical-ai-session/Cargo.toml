@@ -1,0 +1,19 @@
+[package]
+name = "tpt-t-medical-ai-session"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "AI controller as an assist-only operator: session state machine, human gating, per-unit audit and fleet requests (docs/design/ai-session.md, Phase 6.5)"
+keywords = ["ai", "teleoperation", "fleet", "medical"]
+categories = ["science::robotics"]
+
+[dependencies]
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+tpt-t-medical-hipaa = { path = "../tpt-t-medical-hipaa" }
+tpt-t-medical-safety = { path = "../tpt-t-medical-safety" }
+
+[lints]
+workspace = true

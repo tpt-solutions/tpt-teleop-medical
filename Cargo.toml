@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+    "crates/tpt-t-medical-ai-session",
     "crates/tpt-t-medical-bridge-dicom",
     "crates/tpt-t-medical-conformance",
     "crates/tpt-t-medical-bridge-hl7fhir",
