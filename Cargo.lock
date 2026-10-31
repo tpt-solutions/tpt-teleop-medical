@@ -663,6 +663,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpt-t-medical-mcp"
+version = "1.0.0"
+dependencies = [
+ "serde_json",
+ "tpt-t-medical-ai-session",
+ "tpt-t-medical-compliance",
+ "tpt-t-medical-safety",
+]
+
+[[package]]
 name = "tpt-t-medical-pharmacy"
 version = "1.0.0"
 dependencies = [

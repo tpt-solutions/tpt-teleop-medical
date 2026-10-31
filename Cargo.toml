@@ -8,6 +8,7 @@ members = [
     "crates/tpt-t-medical-compliance",
     "crates/tpt-t-medical-haptic",
     "crates/tpt-t-medical-logistics",
+    "crates/tpt-t-medical-mcp",
     "crates/tpt-t-medical-pharmacy",
     "crates/tpt-t-medical-sterilize",
     "crates/tpt-t-medical-core",
