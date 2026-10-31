@@ -22,6 +22,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod direct;
 pub mod ed25519;
 pub mod journal;
 pub mod wal;

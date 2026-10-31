@@ -9,8 +9,8 @@
 //! a sign of tampering, and deleting it silently would destroy that evidence.
 //! Recovery is an operator decision.
 //!
-//! This backend uses ordinary buffered I/O. `O_DIRECT` (spec.txt §4.4) is not
-//! implemented yet, and it is Linux-specific.
+//! This backend uses ordinary buffered I/O. The direct-I/O log, which bypasses
+//! the page cache and pads each write to a block, is [`crate::direct::DirectWal`].
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
