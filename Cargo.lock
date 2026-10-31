@@ -789,7 +789,7 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 
 [[package]]
 name = "tpt-t-core"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "libc",
  "rkyv",
@@ -799,7 +799,7 @@ dependencies = [
 
 [[package]]
 name = "tpt-t-domain-bridge"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "rkyv",
  "tpt-t-core",
@@ -963,7 +963,7 @@ dependencies = [
 
 [[package]]
 name = "tpt-t-ring"
-version = "1.0.0"
+version = "0.1.0"
 
 [[package]]
 name = "tracing"
