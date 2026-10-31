@@ -20,6 +20,7 @@ tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
 
 [dev-dependencies]
 tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+tpt-t-medical-sim = { path = "../tpt-t-medical-sim" }
 
 [lints]
 workspace = true

@@ -114,6 +114,7 @@ pub struct Adapter<A: Actuators> {
     ramp_left: u32,
     latched: bool,
     link: LinkMonitor,
+    feed_link: LinkMonitor,
     fault_flags: u32,
     frames: Vec<VideoFrame>,
     battery_pct: f32,
@@ -164,6 +165,7 @@ impl<A: Actuators> Adapter<A> {
             ramp_left: 0,
             latched: false,
             link: LinkMonitor::new(),
+            feed_link: LinkMonitor::new(),
             fault_flags: 0,
             frames: Vec::new(),
             battery_pct: 100.0,
@@ -174,21 +176,43 @@ impl<A: Actuators> Adapter<A> {
         })
     }
 
-    /// Records one command's one-way delay from the network transport. A lost
-    /// link latches the adapter, as a sensor fault does. A degraded link does
-    /// not stop motion, and the caller should warn the surgeon.
+    /// Records one command's one-way delay, from the surgeon's console to the
+    /// patient's arm. A lost link latches the adapter, as a sensor fault does. A
+    /// degraded link does not stop motion, and the caller should warn the
+    /// surgeon.
     pub fn observe_link(&mut self, sent_us: u64, received_us: u64) -> LinkState {
         let state = self.link.observe(sent_us, received_us);
+        self.latch_if_lost(state)
+    }
+
+    /// Records one sensor-feed message's one-way delay, from the patient's arm to
+    /// the surgeon's console. The surgeon cannot see or feel the arm without it,
+    /// so a lost feed latches the adapter just as a lost command link does.
+    pub fn observe_feed_link(&mut self, sent_us: u64, received_us: u64) -> LinkState {
+        let state = self.feed_link.observe(sent_us, received_us);
+        self.latch_if_lost(state)
+    }
+
+    fn latch_if_lost(&mut self, state: LinkState) -> LinkState {
         if state == LinkState::Lost {
             self.trip(FAULT_SENSOR);
         }
         state
     }
 
-    /// Returns the link state at `now_us`.
+    /// Returns the state of the two-site link at `now_us`: the worse of the
+    /// command path and the feed path.
     #[must_use]
     pub fn link_state(&self, now_us: u64) -> LinkState {
-        self.link.state_at(now_us)
+        self.link
+            .state_at(now_us)
+            .max(self.feed_link.state_at(now_us))
+    }
+
+    /// Returns `true` if a path that has reported is now lost to silence.
+    fn silent_path_lost(&self, now_us: u64) -> bool {
+        let lost = |m: &LinkMonitor| m.samples() > 0 && m.state_at(now_us) == LinkState::Lost;
+        lost(&self.link) || lost(&self.feed_link)
     }
 
     /// Records a joint reading from the arm's sensors.
@@ -255,9 +279,10 @@ impl<A: Actuators> Adapter<A> {
         if self.latched {
             return self.hold_zero();
         }
-        // Once a transport reports, silence past the horizon is a lost link. A
-        // deployment without a transport never reports, so it is not checked.
-        if self.link.samples() > 0 && self.link.state_at(now_us) == LinkState::Lost {
+        // Once a transport reports on a path, silence past the horizon on that path
+        // is a lost link. A deployment without a transport never reports, so it is
+        // not checked.
+        if self.silent_path_lost(now_us) {
             self.trip(FAULT_SENSOR);
             return self.hold_zero();
         }

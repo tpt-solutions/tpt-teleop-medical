@@ -27,7 +27,7 @@ pub const BUDGET_US: u64 = 10_000;
 pub const HORIZON_US: u64 = 50_000;
 
 /// What the link looks like now.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LinkState {
     /// Within budget.
     Nominal,

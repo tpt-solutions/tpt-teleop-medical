@@ -20,7 +20,7 @@ crate uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Known issues
 
-- Multi-site session handling is not started.
+- Two-site session handling: a command path and a feed path, each with its own link monitor. The state is the worse of the two, and a lost feed latches the arm. A real transport is not yet implemented.
 - `cargo deny check bans` fails on two wildcard path dependencies in the tpt-teleop
   repository, which this crate depends on. Adding `version` to those entries in
   tpt-teleop's workspace clears it.

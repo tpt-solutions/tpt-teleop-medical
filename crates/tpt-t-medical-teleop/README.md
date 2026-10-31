@@ -7,8 +7,8 @@ drive it (spec §4.6).
 ## Status
 
 Adapter done against the Domain Teleoperation Interface (DTI). It covers the
-lifecycle, the guard, safety, the sensor feed and link quality (`link`). Multi-site
-session handling beyond the link monitor is not started.
+lifecycle, the guard, safety, the sensor feed and link quality (`link`). Two-site
+session handling covers both paths and the link state. A real transport is not started.
 
 ## Overview
 
@@ -67,7 +67,7 @@ The integration tests in `tests/adapter.rs` drive the adapter through
 
 ## Limitations
 
-- No two-site transport or measured WAN latency; the link monitor takes delays from the caller.
+- No real two-site transport or measured WAN latency. Both paths take delays from the caller, and the tests use the simulator's delay link.
 - The link to the surgeon is provided by tpt-teleop. Latency is not measured here.
 
 ## Dependencies
