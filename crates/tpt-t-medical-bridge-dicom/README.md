@@ -6,8 +6,8 @@ and exports a Basic Text Structured Report.
 
 ## Status
 
-Parser, network client and SR export are done. Pixel ingestion is not
-implemented, and the SR export has not been conformance-validated.
+Parser, network client, SR export and CT pixel ingestion are done. The SR export
+has not been conformance-validated.
 
 ## Overview
 
@@ -25,7 +25,8 @@ implemented, and the SR export has not been conformance-validated.
 - Image size
 
 These are what the vision pipeline needs to match a scan to a patient. Pixel data
-is skipped by its declared length and never read.
+is skipped by its declared length by `parse`. `pixels` reads it: one CT slice, or a
+series stacked into a regular volume.
 
 ### Supported and refused
 
@@ -59,7 +60,7 @@ cargo test -p tpt-t-medical-bridge-dicom
 
 ## Limitations
 
-- No pixel ingestion.
+- Pixel ingestion covers only uncompressed 16-bit MONOCHROME2 CT. Other formats are refused.
 - No C-MOVE and no SCP.
 - The SR export follows the Basic Text SR structure but has not been validated
   against a conformance test suite.
@@ -72,8 +73,8 @@ None. The crate uses only `std`.
 
 - [`tpt-t-medical-conformance`](../tpt-t-medical-conformance) tests this parser
   together with the HL7 bridge and the audit journal.
-- [`tpt-t-medical-vision`](../tpt-t-medical-vision) is where pixel ingestion would
-  feed.
+- [`tpt-t-medical-vision`](../tpt-t-medical-vision) is where the volume from
+  `read_volume` feeds.
 
 ## Licence
 

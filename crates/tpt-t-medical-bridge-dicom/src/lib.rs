@@ -16,7 +16,8 @@
 //!   are refused, because they cannot be skipped safely without parsing their
 //!   contents.
 //!
-//! Pixel data is never read. It is skipped by length.
+//! [`parse`] skips pixel data by length. [`pixels`] reads it: one CT slice, or
+//! a series that becomes a volume for the segmentation pipeline.
 //!
 //! Input comes from outside the hospital, so every size is bounded, and
 //! malformed input returns an error rather than panicking.
@@ -26,6 +27,7 @@
 use core::fmt;
 
 pub mod net;
+pub mod pixels;
 pub mod sr;
 
 /// Largest file accepted, in bytes.
@@ -160,8 +162,17 @@ pub fn parse(file: &[u8]) -> Result<DicomHeader, ParseError> {
         return Err(ParseError::NoPreamble);
     }
 
-    // File meta information is always Explicit VR Little Endian. Its only job
-    // here is to name the transfer syntax of the dataset that follows.
+    let (syntax, elements) = scan(file)?;
+    let mut found = Found::default();
+    for el in &elements {
+        found.take(file, el)?;
+    }
+    found.finish(syntax)
+}
+
+/// Walks the data elements after the file meta information. Returns the
+/// transfer syntax and every element header, in file order.
+fn scan(file: &[u8]) -> Result<(TransferSyntax, Vec<Element>), ParseError> {
     let mut pos = PREAMBLE_LEN + MAGIC.len();
     let mut uid = None;
     while let Ok(el) = read_explicit(file, pos) {
@@ -180,22 +191,19 @@ pub fn parse(file: &[u8]) -> Result<DicomHeader, ParseError> {
         _ => return Err(ParseError::UnsupportedTransferSyntax(uid)),
     };
 
-    let mut found = Found::default();
-    let mut count = 0usize;
+    let mut elements = Vec::new();
     while pos < file.len() {
-        count += 1;
-        if count > MAX_ELEMENTS {
+        if elements.len() >= MAX_ELEMENTS {
             return Err(ParseError::TooManyElements);
         }
         let el = match syntax {
             TransferSyntax::ExplicitLittleEndian => read_explicit(file, pos)?,
             TransferSyntax::ImplicitLittleEndian => read_implicit(file, pos)?,
         };
-        found.take(file, &el)?;
         pos = el.next;
+        elements.push(el);
     }
-
-    found.finish(syntax)
+    Ok((syntax, elements))
 }
 
 #[derive(Default)]
