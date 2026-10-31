@@ -80,6 +80,7 @@ fn open_direct(path: &Path) -> io::Result<File> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .custom_flags(FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH)
         .open(path)
 }
@@ -90,6 +91,7 @@ fn open_direct(path: &Path) -> io::Result<File> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(path)
 }
 
@@ -200,7 +202,7 @@ mod tests {
         assert_eq!(got.len(), 3);
         assert_eq!(got[0], b"first");
         assert_eq!(got[1].len(), 5_000);
-        assert!(got[2].is_empty());
+        assert_eq!(got[2].len(), 0);
     }
 
     #[test]

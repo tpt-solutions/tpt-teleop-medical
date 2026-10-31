@@ -288,7 +288,7 @@ mod tests {
             }
         }
         let surfaces = g.surfaces([0.05, 2.05, 2.05]);
-        assert!(!surfaces.is_empty());
+        assert_ne!(surfaces.len(), 0);
         let source = UvSource::new(1.0).expect("source");
         // The planner returns a cycle time, and a longer one for a higher dose.
         let short = plan_cycle(&source, &surfaces, 1.0).expect("plan");
