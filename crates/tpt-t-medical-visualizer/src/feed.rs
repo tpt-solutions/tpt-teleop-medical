@@ -190,8 +190,8 @@ mod tests {
     #[test]
     fn an_empty_feed_shows_no_copies_as_unknown() {
         let scene = Feed::new(4, 4).expect("feed").snapshot();
-        assert!(scene.trajectory_m.is_empty());
-        assert!(scene.forces.is_empty());
+        assert_eq!(scene.trajectory_m.len(), 0);
+        assert_eq!(scene.forces.len(), 0);
         assert_eq!(scene.tmr, [Copy3::Unknown; 3]);
     }
 
