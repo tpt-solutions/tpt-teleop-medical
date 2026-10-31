@@ -46,7 +46,9 @@ The tests use synthetic images only.
 ## Related crates
 
 - [`tpt-t-medical-bridge-dicom`](../tpt-t-medical-bridge-dicom) reads the metadata
-  that matches a scan to a patient. Pixel ingestion is not yet wired.
+  that matches a scan to a patient. Its pixel reader (`pixels`) feeds CT
+  slices and volumes into this crate's segmentation path, and
+  `tpt-t-medical-conformance/tests/vision_fixture.rs` runs that path end to end.
 
 ## Licence
 

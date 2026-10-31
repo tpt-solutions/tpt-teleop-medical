@@ -30,8 +30,9 @@ These follow from the existing design. The AI layer adds no privileges.
    command, as it does for human commands (`tpt-t-medical-core` `AuditedLoop`).
 4. **A human can always take control.** Override is immediate and does not wait
    for the AI to yield. It is recorded like any other transition.
-5. **AI sessions default to assist-only [assumed].** Full autonomy on a surgical
-   arm is out of scope until separately approved.
+5. **AI sessions default to assist-only [assumed].** Full autonomy is an opt-in
+   mode. The surgeon must choose it before engaging, for each engagement. It is
+   never the default, and it is never chosen by the AI or a dispatcher.
 6. **PHI is gated.** An AI or MCP tool sees PHI only with a consent token from
    `tpt-t-medical-hipaa`, and that gate applies to training data too.
 
@@ -52,8 +53,10 @@ AUTONOMOUS ──request──▶ REQUESTING_TELEOP ──engage──▶ TELEOP
 - `REQUESTING_TELEOP`: the AI or the domain requests human assistance. A human
   must engage. The AI cannot engage itself.
 - `TELEOP_ACTIVE`: in assist mode, the AI's commands are *advisory* and are
-  merged with the human's before the veto. In full-autonomy mode (if approved),
-  the AI's commands are the operator commands, still behind the veto.
+  merged with the human's before the veto. In full-autonomy mode (opt-in, see
+  principle 5), the AI's checked proposals are the commanded motion, still behind
+  the veto. The surgeon can override at any time, and the mode ends with the
+  engagement.
 - `RETURNING_TO_AUTONOMY`: a smooth handover, using the same hold-last-value
   rules as the haptic loop, so the arm does not jerk.
 
