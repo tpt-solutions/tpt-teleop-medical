@@ -721,6 +721,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "tpt-t-medical-visualizer"
+version = "1.0.0"
+dependencies = [
+ "tpt-t-medical-surgical",
+]
+
+[[package]]
 name = "tracing"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"

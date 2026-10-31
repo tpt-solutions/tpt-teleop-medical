@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-visualizer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "Operator visualizer model: trajectory, workspace envelope, fixture boundary, force vectors, audit timeline and TMR state, with a projection (window in tpt-t-medical-visualizer-app)"
+keywords = ["visualizer", "egui", "robotics"]
+categories = ["visualization", "science::robotics"]
+
+[dependencies]
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+
+[lints]
+workspace = true
