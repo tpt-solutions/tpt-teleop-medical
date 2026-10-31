@@ -10,5 +10,13 @@ description = "Headless simulator core: 7-DOF joint dynamics with gravity, frict
 keywords = ["simulation", "fault-injection", "robotics"]
 categories = ["simulation", "science::robotics"]
 
+[dependencies]
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+
+[dev-dependencies]
+tpt-t-medical-ai-session = { path = "../tpt-t-medical-ai-session" }
+tpt-t-medical-compliance = { path = "../tpt-t-medical-compliance" }
+tpt-t-medical-safety = { path = "../tpt-t-medical-safety" }
+
 [lints]
 workspace = true

@@ -683,6 +683,12 @@ version = "1.0.0"
 [[package]]
 name = "tpt-t-medical-sim"
 version = "1.0.0"
+dependencies = [
+ "tpt-t-medical-ai-session",
+ "tpt-t-medical-compliance",
+ "tpt-t-medical-safety",
+ "tpt-t-medical-surgical",
+]
 
 [[package]]
 name = "tpt-t-medical-sterilize"

@@ -9,18 +9,27 @@
 //! * [`Fault::NetworkDrop`]: commands stop arriving. Joints get zero torque
 //!   until the link returns.
 //!
-//! Not yet modelled: the forward kinematics of a surgical arm, tissue
-//! deformation, haptic force rendering, and the visualizer. The spec asks for
-//! all of them, and they need the arm's geometry and a tissue model, neither of
-//! which is in the spec yet.
+//! Also modelled:
+//!
+//! * [`link::Link`]: command latency and deterministic jitter.
+//! * [`tissue::Tissue`]: a mass-spring tissue that the tool pushes on.
+//! * [`tool_position`]: the tool's position from the joint readings, using the
+//!   arm's kinematics.
+//!
+//! Not yet modelled: haptic force rendering and the visualizer. The
+//! visualizer is a GUI and is not started. Haptic rendering needs the haptic
+//! device model, which is not in the spec.
 
 #![forbid(unsafe_code)]
 
 pub mod joint;
-
+pub mod link;
+pub mod tissue;
 use core::fmt;
 
 pub use joint::{Joint, JointParams, backlash};
+
+use tpt_t_medical_surgical::kinematics::Arm;
 
 /// Number of joints in the arm.
 pub const JOINTS: usize = 7;
@@ -184,6 +193,19 @@ impl Simulator {
     }
 }
 
+/// Returns the tool's position for one set of readings, in the base frame.
+///
+/// Returns `None` if any joint has no reading, because a sensor failure means
+/// the position is unknown and must not be guessed.
+#[must_use]
+pub fn tool_position(arm: &Arm, readings: &Readings) -> Option<[f64; 3]> {
+    let mut q = [0.0; JOINTS];
+    for (slot, reading) in q.iter_mut().zip(readings.positions) {
+        *slot = reading?;
+    }
+    arm.forward(q).map(|pose| pose.position_m)
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn step_seconds() -> f64 {
     STEP_US as f64 / 1_000_000.0
@@ -299,5 +321,16 @@ mod tests {
             s
         };
         assert_eq!(run(), run());
+    }
+
+    #[test]
+    fn tool_position_is_known_only_while_every_joint_reports() {
+        let arm = Arm::reference();
+        let mut sim = sim();
+        let readings = sim.step(Some([0.0; JOINTS]));
+        assert!(tool_position(&arm, &readings).is_some());
+        sim.inject(Fault::SensorFailure(2)).expect("inject");
+        let readings = sim.step(Some([0.0; JOINTS]));
+        assert_eq!(tool_position(&arm, &readings), None);
     }
 }
