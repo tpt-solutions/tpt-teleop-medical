@@ -12,6 +12,12 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `tpt-t-medical-bridge-dicom`: CT pixel ingestion in `pixels`. `read_slice` reads one uncompressed 16-bit MONOCHROME2 slice to Hounsfield units. `read_volume` orders a series by `ImagePositionPatient` and refuses non-uniform spacing, mismatched sizes and volumes above 64 M voxels.
+- `tpt-t-medical-ai-session`: `Fleet::pending` (a FIFO queue of units awaiting a surgeon, derived from unit state) and a read-only `Fleet::summary`. The dispatcher still has no authority beyond requesting.
+- `tpt-t-medical-teleop`: `link` module, a fixed-size link-quality monitor. Nominal within 10 ms, degraded up to the 50 ms horizon, lost beyond it or on a clock fault. `Adapter::observe_link` latches the adapter on a lost link, and a silent link past the horizon also latches once a transport has reported.
+- `tpt-t-medical-sim`: `haptic::HapticRig`, which renders contact force from the simulated tool using the impedance model of `tpt-t-medical-haptic`.
+- Property and budget suites for the notch filter, SDF lookup, HL7 and DICOM parsers, and the TMR voter. An end-to-end telesurgery flow test runs spec §6 across the adapter, safety, audit and predictive display.
+
 - `tpt-t-medical-teleop` (new crate): the surgical arm as a `DomainTeleopInterface` adapter from the tpt-teleop domain bridge, linked by path to `../tpt-teleop/crates/tpt-t-domain-bridge`. Commands pass through a 10 Hz tremor notch, motion scaling, and the virtual-fixture guard before they move a tool target. The tool is tracked by a spring and damper through the edge torque pipeline. The safety monitor runs on every tick, and a stop zeroes the torque and latches. Engage starts at the current tool position, and disengage ramps the tracking force away while gravity compensation holds the arm. Tests drive the adapter through `DomainSession`.
 - `tpt-t-medical-vision` (new crate): block-matching stereo with a left-right check, depth from disparity, back-projection to a point cloud, AR overlay of scan points through the registration, and segmentation to a signed-distance grid for the virtual fixtures, using an exact separable distance transform. Checked on synthetic images.
 - `tpt-t-medical-bridge-dicom`: DICOM network client over TCP (`net` module), with Implicit and Explicit VR encoding, PDU framing, and the C-ECHO, C-FIND, C-GET and C-STORE operations. C-GET is used for retrieval, since C-MOVE needs an inbound listener. Tests run the client against a loopback SCP. `sr` exports a Basic Text Structured Report as a Part 10 file, and that export has not been conformance-validated.
@@ -61,3 +67,7 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   for rustfmt, clippy and cargo-deny.
 - `README.md`, `SECURITY.md`, `docs/ARCHITECTURE.md`, and regulatory
   scaffolding templates under `docs/regulatory/`.
+
+### Fixed
+
+- `tpt-t-medical-teleop`: the virtual-fixture guard checked only the measured tool, so a lagging arm let the commanded target enter a structure. A motion is now applied only if the target's next position is clear. Otherwise it is blocked with full feedback.

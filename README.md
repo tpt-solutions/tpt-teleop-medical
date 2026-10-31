@@ -6,8 +6,8 @@ logistics, automated pharmacy, and sterilization robotics.
 > **Status: pre-alpha.** Pure logic is implemented and tested for most of the
 > safety, compliance, bridge and hospital-automation crates. Hardware
 > integration is not: there is no real-time target, no Linux O_DIRECT WAL, no
-> hardware-backed keys, no hardware-validated arm kinematics, and no multi-site
-> teleoperation sessions. Nothing here should be used on a patient. See
+> hardware-backed keys, no hardware-validated arm kinematics, and no two-site
+> transport. Nothing here should be used on a patient. See
 > [todo.md](todo.md) for the full checklist.
 
 ## Crates
@@ -24,19 +24,19 @@ logistics, automated pharmacy, and sterilization robotics.
 | `tpt-t-medical-track` | Constant-velocity Kalman fusion; Horn rigid registration | Logic done; linear model; checked on simulated data |
 | `tpt-t-medical-ai-session` | AI assist-only session, surgeon-only authority, per-unit audit, fleet requests, PHI gate | Logic done; no DTI wiring; MCP deferred |
 | `tpt-t-medical-haptic` | Impedance contact, hold-last-value loop | Logic done; no pinned core |
-| `tpt-t-medical-sim` | Joint dynamics, fault injection, latency and jitter, tissue, tool position, AI fault scenarios | Headless core; no haptic rendering |
+| `tpt-t-medical-sim` | Joint dynamics, fault injection, latency and jitter, tissue, tool position, AI fault scenarios | Headless core; haptic rendering on the impedance stand-in; no visualizer |
 | `tpt-t-medical-pharmacy` | FEFO, cold chain, narcotic custody, barcode/weight unit-dose packaging | Logic done |
 | `tpt-t-medical-sterilize` | UV-C dose planning, LiDAR room mapping with shadowing, coverage check | Logic done |
 | `tpt-t-medical-logistics` | Clean/dirty zones, elevator arbitration, UV-aware routing, MQTT framing, transport profiles | Logic done; no broker connection, no door model |
-| `tpt-t-medical-teleop` | Telesurgery adapter for the tpt-teleop `DomainTeleopInterface`: engage, command, disengage, emergency stop, sensor feed | Adapter done against the DTI; no multi-site session handling |
+| `tpt-t-medical-teleop` | Telesurgery adapter for the tpt-teleop `DomainTeleopInterface`: engage, command, disengage, emergency stop, sensor feed | Adapter done against the DTI; link-quality monitor; no two-site transport |
 | `tpt-t-medical-vision` | Stereo depth, point cloud, AR overlay, segmentation to fixture distance | Algorithms done on synthetic data; no real-time or clinical validation |
 | `tpt-t-medical-mcp` | MCP supervisory interface: read-only tools and one journalled assistance request | Done; no reset, release, limit or veto tool |
 | `tpt-t-medical-visualizer` | Scene model: trajectory, envelope, fixture, forces, timeline, TMR state, projection | Scene model and projection done; self-contained HTML export (`examples/export.rs`) |
 | `tpt-t-medical-bridge-hl7fhir` | HL7v2 ADT, FHIR MedicationRequest, audit posting, pharmacy and transport feeds | Parsers, audit and both feeds done |
-| `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata; C-ECHO, C-FIND, C-GET, C-STORE client; Basic Text SR export | Parser, client and SR export done; no pixel ingestion; SR not conformance-validated |
+| `tpt-t-medical-bridge-dicom` | Uncompressed DICOM metadata; C-ECHO, C-FIND, C-GET, C-STORE client; Basic Text SR export | Parser, client, SR export and CT pixel ingestion done; SR not conformance-validated |
 | `tpt-t-medical-conformance` | Cross-bridge tests (test-only) | Done |
 
-The teleop adapter links to the tpt-teleop domain bridge (`tpt-teleop/crates/tpt-t-domain-bridge`) by path. Not started: multi-site session handling, pixel ingestion for the segmentation pipeline, the haptic device model, and a live feed into the visualizer. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The teleop adapter links to the tpt-teleop domain bridge (`tpt-teleop/crates/tpt-t-domain-bridge`) by path. Not started: a two-site transport, the haptic device model beyond the impedance stand-in, and a live feed into the visualizer. Pixel ingestion and the fleet queue exist; wiring them into the vision pipeline and the dispatcher UI is pending. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## What it is
 
