@@ -62,7 +62,7 @@ compliance and is bounded by safety — see spec.txt §1/§4.
 ## Phase 6 — Hospital-IT Interoperability Bridges
 
 - [x] `tpt-t-medical-bridge-hl7fhir` *(HL7v2 ADT and FHIR MedicationRequest parsers, FHIR output, audit posting to compliance, and the pharmacy and transport feeds done)* — HL7v2 ADT feed ingestion (patient admission/transfer/discharge) and FHIR resources (orders, medication requests) in/out, feeding `tpt-t-medical-logistics`/`tpt-t-medical-pharmacy` and posting audit-relevant events to `tpt-t-medical-compliance`
-- [ ] `tpt-t-medical-bridge-dicom` *(metadata parser; C-ECHO, C-FIND, C-GET and C-STORE client; and Basic Text SR export done; pixel ingestion for CT slices and volumes done in `src/pixels.rs`; SR conformance validation pending)* — DICOM query/retrieve for pre-op CT/MRI ingestion into `tpt-t-medical-vision`'s segmentation pipeline; DICOM SR export path for structured post-op reports
+- [ ] `tpt-t-medical-bridge-dicom` *(metadata parser; C-ECHO, C-FIND, C-GET and C-STORE client; and Basic Text SR export done; pixel ingestion for CT slices and volumes done in `src/pixels.rs`; SR structural conformance checks done in `tests/sr_conformance.rs`; external validator against a PACS pending)* — DICOM query/retrieve for pre-op CT/MRI ingestion into `tpt-t-medical-vision`'s segmentation pipeline; DICOM SR export path for structured post-op reports
 - [x] Cross-bridge conformance/integration test suite (HL7/FHIR + DICOM fixtures against both bridge crates)
 
 ## Phase 6.5 — AI & Fleet Dispatch

@@ -70,4 +70,6 @@ project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `tpt-t-medical-bridge-dicom`: the Basic Text SR export wrote its concept name and content sequences after the other top-level elements, which broke the ascending tag order that PS3.5 §7.1 requires. It also omitted Series Number and the Type 2 patient and study attributes. The export now sorts every top-level element by tag and includes them, and `tests/sr_conformance.rs` checks the result.
+
 - `tpt-t-medical-teleop`: the virtual-fixture guard checked only the measured tool, so a lagging arm let the commanded target enter a structure. A motion is now applied only if the target's next position is clear. Otherwise it is blocked with full feedback.
