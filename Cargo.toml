@@ -5,6 +5,7 @@ members = [
     "crates/tpt-t-medical-vision",
     "crates/tpt-t-medical-visualizer",
     "crates/tpt-t-medical-track",
+    "crates/tpt-t-medical-edge",
     "crates/tpt-t-medical-bridge-dicom",
     "crates/tpt-t-medical-conformance",
     "crates/tpt-t-medical-bridge-hl7fhir",

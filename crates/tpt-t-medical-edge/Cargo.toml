@@ -1,0 +1,17 @@
+[package]
+name = "tpt-t-medical-edge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+description = "1 kHz control-law pipeline: Cartesian force to joint torque, gravity compensation, friction and torque limits (spec.txt §4.3, Phase 3)"
+keywords = ["control", "torque", "robotics"]
+categories = ["science::robotics"]
+
+[dependencies]
+tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
+
+[lints]
+workspace = true
