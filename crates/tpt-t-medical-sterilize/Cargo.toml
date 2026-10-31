@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "UV-C disinfection: dose planning from geometry and post-cycle coverage validation (spec.txt §5.4)"
 keywords = ["uv-c", "disinfection", "dose"]

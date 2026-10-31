@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "1 kHz haptic rendering: impedance contact model, hold-last-value on missed deadline (spec.txt §4.2)"
 keywords = ["haptic", "impedance", "real-time"]

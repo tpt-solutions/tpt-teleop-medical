@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "AI controller as an assist-only operator: session state machine, human gating, per-unit audit and fleet requests (docs/design/ai-session.md, Phase 6.5)"
 keywords = ["ai", "teleoperation", "fleet", "medical"]

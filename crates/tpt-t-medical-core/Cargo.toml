@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Central event loop and surgical state machine (spec.txt §3, Phase 1)"
 keywords = ["surgical", "state-machine", "safety"]

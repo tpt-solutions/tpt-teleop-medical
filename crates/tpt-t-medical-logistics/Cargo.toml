@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Hospital delivery robots: clean/dirty/isolation zone rules and single-occupancy elevator arbitration (spec.txt §5.2)"
 keywords = ["logistics", "infection-control", "elevator"]

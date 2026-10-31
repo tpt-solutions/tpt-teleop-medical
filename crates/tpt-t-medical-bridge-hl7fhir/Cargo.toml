@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "HL7v2 ADT and FHIR MedicationRequest ingestion: bounded parsers (Phase 6) (spec.txt §5.2, Phase 6)"
 keywords = ["hl7", "adt", "interoperability"]

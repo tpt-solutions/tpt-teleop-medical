@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Tool and anatomy tracking: constant-velocity Kalman fusion of optical and electromagnetic position, and rigid registration to a pre-op scan (spec.txt §4.4, Phase 3)"
 keywords = ["tracking", "kalman", "registration"]

@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Telesurgery adapter: implements the tpt-teleop Domain Teleoperation Interface for the surgical arm (tpt-t-domain-bridge, spec §4.6)"
 keywords = ["teleoperation", "surgery", "adapter"]

@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "MCP supervisory interface for fleet orchestration: read-mostly tools, one scoped journalled write, no path to the safety monitor (docs/design/ai-session.md §6)"
 keywords = ["mcp", "fleet", "supervision"]

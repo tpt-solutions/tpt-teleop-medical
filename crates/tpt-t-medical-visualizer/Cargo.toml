@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Operator visualizer model: trajectory, workspace envelope, fixture boundary, force vectors, audit timeline and TMR state, with a projection (window in tpt-t-medical-visualizer-app)"
 keywords = ["visualizer", "egui", "robotics"]

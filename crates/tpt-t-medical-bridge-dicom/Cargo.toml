@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "DICOM metadata ingestion for pre-op CT/MRI: bounded parser for uncompressed Part 10 files (spec.txt §3, Phase 6)"
 keywords = ["dicom", "medical-imaging", "interoperability"]

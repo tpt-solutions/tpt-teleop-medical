@@ -5,8 +5,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Cross-bridge conformance tests: HL7 ADT, DICOM metadata, and the audit journal, exercised together (Phase 6)"
+keywords = ["conformance", "interoperability", "hl7", "dicom", "testing"]
+categories = ["development-tools::testing"]
 
 [dev-dependencies]
 tpt-t-medical-bridge-dicom = { path = "../tpt-t-medical-bridge-dicom" }

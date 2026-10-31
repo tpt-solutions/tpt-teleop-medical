@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
 publish = false
 description = "Headless simulator core: 7-DOF joint dynamics with gravity, friction and backlash, and fault injection (spec.txt §8)"
 keywords = ["simulation", "fault-injection", "robotics"]
