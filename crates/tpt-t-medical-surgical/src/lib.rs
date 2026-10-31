@@ -7,6 +7,11 @@
 //!   master input.
 //! * [`SdfGrid`] looks up the signed distance to a critical structure, using
 //!   trilinear interpolation.
+//! * [`kinematics::Arm`] computes the tool pose from the seven joint angles.
+//! * [`predict::Predictor`] is the predictive display: it shows the tool where
+//!   it will be, and hides network delay of up to 50 ms.
+//! * [`guard::Guard`] keeps the tool out of a forbidden structure, and overrides
+//!   the master if the tool stays inside too long.
 //! * [`fixture::repulsive_force`] turns that distance into the progressive force
 //!   the surgeon feels as they approach a forbidden zone.
 //!
@@ -17,10 +22,16 @@
 #![forbid(unsafe_code)]
 
 pub mod fixture;
+pub mod guard;
+pub mod kinematics;
 pub mod notch;
+pub mod predict;
 pub mod scaling;
 pub mod sdf;
 
+pub use guard::Guard;
+pub use kinematics::Arm;
 pub use notch::NotchFilter;
+pub use predict::Predictor;
 pub use scaling::MotionScaler;
 pub use sdf::SdfGrid;
