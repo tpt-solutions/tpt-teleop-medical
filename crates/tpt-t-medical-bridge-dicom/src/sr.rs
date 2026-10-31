@@ -6,9 +6,10 @@
 //! endian, so it can be stored with C-STORE (see [`crate::net::Association`])
 //! or written to disk.
 //!
-//! This is a minimal Basic Text SR. It carries the attributes the SR module
-//! requires, and it has not been run through a DICOM conformance validator.
-//! That needs the target PACS, and it is listed as pending in the checklist.
+//! This is a minimal Basic Text SR. `tests/sr_conformance.rs` reads the export
+//! back and checks the Type 1 and Type 2 attributes it needs, the ascending tag
+//! order, and the content items. It has not been run through an external DICOM
+//! conformance validator. That needs the target PACS, and it is still pending.
 //!
 //! Inputs are validated before anything is written, because they come from the
 //! clinical record: UIDs must be well-formed, and text is bounded.
@@ -27,6 +28,8 @@ pub const MAX_FINDING_BYTES: usize = 4_096;
 pub const MAX_PATIENT_BYTES: usize = 64;
 
 const PREAMBLE_LEN: usize = 128;
+const CONCEPT_NAME: (u16, u16) = (0x0040, 0xA043);
+const CONTENT_SEQUENCE: (u16, u16) = (0x0040, 0xA730);
 
 /// A coded concept, as (value, scheme, meaning).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,38 +152,56 @@ pub fn export_basic_text_sr(report: &Report) -> Result<Vec<u8>, SrError> {
         .iter()
         .map(|text| sequence_item(&text_item(text)))
         .collect();
-    let mut dataset = encode_explicit(&[
-        ((0x0008, 0x0016), *b"UI", BASIC_TEXT_SR.as_bytes().to_vec()),
-        (
+
+    // Each top-level element is encoded on its own, then the set is sorted by
+    // tag. PS3.5 §7.1 requires ascending order, and the sequences are not
+    // sorted by encode_explicit, so they must be placed here.
+    let mut top = vec![
+        element((0x0008, 0x0016), *b"UI", BASIC_TEXT_SR.as_bytes().to_vec()),
+        element(
             (0x0008, 0x0018),
             *b"UI",
             report.sop_instance_uid.as_bytes().to_vec(),
         ),
-        ((0x0008, 0x0023), *b"DA", report.date.as_bytes().to_vec()),
-        ((0x0008, 0x0033), *b"TM", report.time.as_bytes().to_vec()),
-        ((0x0008, 0x0060), *b"CS", b"SR".to_vec()),
-        (
+        element((0x0008, 0x0020), *b"DA", Vec::new()),
+        element((0x0008, 0x0023), *b"DA", report.date.as_bytes().to_vec()),
+        element((0x0008, 0x0030), *b"TM", Vec::new()),
+        element((0x0008, 0x0033), *b"TM", report.time.as_bytes().to_vec()),
+        element((0x0008, 0x0050), *b"SH", Vec::new()),
+        element((0x0008, 0x0060), *b"CS", b"SR".to_vec()),
+        element((0x0008, 0x0090), *b"PN", Vec::new()),
+        element((0x0010, 0x0010), *b"PN", Vec::new()),
+        element(
             (0x0010, 0x0020),
             *b"LO",
             report.patient_id.as_bytes().to_vec(),
         ),
-        (
+        element((0x0010, 0x0030), *b"DA", Vec::new()),
+        element((0x0010, 0x0040), *b"CS", Vec::new()),
+        element(
             (0x0020, 0x000D),
             *b"UI",
             report.study_uid.as_bytes().to_vec(),
         ),
-        (
+        element((0x0020, 0x0010), *b"SH", Vec::new()),
+        element(
             (0x0020, 0x000E),
             *b"UI",
             report.series_uid.as_bytes().to_vec(),
         ),
-        ((0x0020, 0x0013), *b"IS", b"1".to_vec()),
-        ((0x0040, 0xA050), *b"CS", b"SEPARATE".to_vec()),
-        ((0x0040, 0xA491), *b"CS", b"COMPLETE".to_vec()),
-        ((0x0040, 0xA493), *b"CS", b"UNVERIFIED".to_vec()),
-    ]);
-    dataset.extend(concept_name_sequence((0x0040, 0xA043), &report.title));
-    dataset.extend(sequence_element((0x0040, 0xA730), &items));
+        element((0x0020, 0x0011), *b"IS", b"1".to_vec()),
+        element((0x0020, 0x0013), *b"IS", b"1".to_vec()),
+        element((0x0040, 0xA050), *b"CS", b"SEPARATE".to_vec()),
+        element((0x0040, 0xA491), *b"CS", b"COMPLETE".to_vec()),
+        element((0x0040, 0xA493), *b"CS", b"UNVERIFIED".to_vec()),
+        (
+            CONCEPT_NAME,
+            concept_name_sequence(CONCEPT_NAME, &report.title),
+        ),
+        (CONTENT_SEQUENCE, sequence_element(CONTENT_SEQUENCE, &items)),
+    ];
+    top.sort_by_key(|(tag, _)| *tag);
+    let dataset: Vec<u8> = top.into_iter().flat_map(|(_, bytes)| bytes).collect();
 
     let meta = meta_group(&report.sop_instance_uid);
     let mut out = vec![0_u8; PREAMBLE_LEN];
@@ -188,6 +209,11 @@ pub fn export_basic_text_sr(report: &Report) -> Result<Vec<u8>, SrError> {
     out.extend_from_slice(&meta);
     out.extend_from_slice(&dataset);
     Ok(out)
+}
+
+/// One top-level element, encoded alone, with its tag for sorting.
+fn element(tag: (u16, u16), vr: [u8; 2], value: Vec<u8>) -> ((u16, u16), Vec<u8>) {
+    (tag, encode_explicit(&[(tag, vr, value)]))
 }
 
 /// The TEXT content item for one finding, without its item wrapper.
