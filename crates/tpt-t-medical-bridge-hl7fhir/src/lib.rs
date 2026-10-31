@@ -22,6 +22,7 @@
 
 pub mod audit;
 pub mod fhir;
+pub mod logistics;
 pub mod pharmacy;
 
 use core::fmt;

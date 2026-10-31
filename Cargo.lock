@@ -599,6 +599,7 @@ version = "1.0.0"
 dependencies = [
  "serde_json",
  "tpt-t-medical-compliance",
+ "tpt-t-medical-logistics",
  "tpt-t-medical-pharmacy",
 ]
 
