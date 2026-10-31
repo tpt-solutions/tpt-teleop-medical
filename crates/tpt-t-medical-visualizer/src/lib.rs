@@ -6,9 +6,10 @@
 //! The window shows the tool's trajectory against its workspace box, the fixture
 //! boundary, force arrows, the audit timeline, and the state of the three TMR
 //! copies. The demonstration scene is a reference arm swept through a slow
-//! motion. A live view would take the scene from the running system instead.
+//! motion. A live view takes the scene from the running system through [`feed`].
 
 #![forbid(unsafe_code)]
 
+pub mod feed;
 pub mod html;
 pub mod scene;
