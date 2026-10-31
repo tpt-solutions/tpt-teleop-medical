@@ -5,10 +5,10 @@ logistics, automated pharmacy, and sterilization robotics.
 
 > **Status: pre-alpha.** Pure logic is implemented and tested for most of the
 > safety, compliance, bridge and hospital-automation crates. Hardware
-> integration is not: there is no real-time target, no O_DIRECT WAL, no
-> hardware-backed keys, no arm geometry, and no teleoperation adapter. Nothing
-> here should be used on a patient. See [todo.md](todo.md) for the full
-> checklist.
+> integration is not: there is no real-time target, no Linux O_DIRECT WAL, no
+> hardware-backed keys, no hardware-validated arm kinematics, and no multi-site
+> teleoperation sessions. Nothing here should be used on a patient. See
+> [todo.md](todo.md) for the full checklist.
 
 ## Crates
 
@@ -63,9 +63,17 @@ These come from the spec and apply to every crate:
 
 ## Building
 
-The toolchain is pinned to stable with `rustfmt` and `clippy` by
-[rust-toolchain.toml](rust-toolchain.toml). The minimum supported Rust version
-is 1.85.
+The minimum supported Rust version is 1.85. CI builds and tests on Linux and
+Windows with stable and 1.85, and runs loom and Miri checks on `tpt-t-medical-ring`.
+
+`tpt-t-medical-teleop` depends on the tpt-teleop core by relative path, so the
+workspace expects a sibling checkout next to this one:
+
+```
+parent/
+├── tpt-teleop/          # https://github.com/tpt-solutions/tpt-teleop
+└── tpt-teleop-medical/  # this repository
+```
 
 ```sh
 cargo build --workspace
@@ -74,6 +82,10 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo deny check
 ```
+
+`cargo deny check bans` currently fails on two wildcard path dependencies in the
+tpt-teleop workspace. See the Known issues section of
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Licensing
 
