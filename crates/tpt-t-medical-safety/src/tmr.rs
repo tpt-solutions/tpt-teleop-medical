@@ -18,7 +18,7 @@ pub fn vote<T: PartialEq + Copy>(a: T, b: T, c: T) -> Option<T> {
 /// In this crate the three run in sequence on one thread. The spec puts each
 /// on its own isolated core, which needs the real-time target to build and
 /// measure.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tmr {
     monitors: [Monitor; 3],
 }
@@ -56,6 +56,13 @@ impl Tmr {
             monitor.latch(StopReason::Disagreement);
         }
         Decision::Stop(StopReason::Disagreement)
+    }
+
+    /// Returns the reason the system is latched, if it is. Every stop reaches
+    /// all three copies, so the first copy speaks for the system.
+    #[must_use]
+    pub const fn latched(&self) -> Option<StopReason> {
+        self.monitors[0].latched()
     }
 
     /// Latches an emergency stop in all three copies.
