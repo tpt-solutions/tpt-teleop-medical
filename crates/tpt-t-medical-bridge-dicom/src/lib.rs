@@ -8,8 +8,10 @@
 //!
 //! * Supported transfer syntaxes: Explicit VR Little Endian and Implicit VR
 //!   Little Endian. Anything else, including compressed syntaxes, is refused.
-//! * Not implemented: DICOM network services (C-FIND, C-MOVE, C-STORE), which
-//!   are a separate protocol with its own state machine, and DICOM SR export.
+//! * Network services are in [`net`]: the calling side of C-ECHO, C-FIND, C-GET
+//!   and C-STORE. C-MOVE is not implemented, because it needs an inbound
+//!   listener. The listening side is not implemented. Retrieval uses C-GET.
+//! * [`sr`] exports a Basic Text Structured Report for a post-op report.
 //! * Sequences are skipped by length and not entered. Undefined-length elements
 //!   are refused, because they cannot be skipped safely without parsing their
 //!   contents.
@@ -22,6 +24,9 @@
 #![forbid(unsafe_code)]
 
 use core::fmt;
+
+pub mod net;
+pub mod sr;
 
 /// Largest file accepted, in bytes.
 pub const MAX_FILE_BYTES: usize = 512 * 1024 * 1024;
