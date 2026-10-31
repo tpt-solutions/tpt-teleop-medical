@@ -8,7 +8,9 @@ drive it (spec §4.6).
 
 Adapter done against the Domain Teleoperation Interface (DTI). It covers the
 lifecycle, the guard, safety, the sensor feed and link quality (`link`). Two-site
-session handling covers both paths and the link state. A real transport is not started.
+session handling covers both paths and the link state. The network transport
+(`transport`) carries surgeon commands and telemetry over sealed UDP, with a signed
+handshake and a trust check on every peer.
 
 ## Overview
 
@@ -43,8 +45,26 @@ Other methods: `push_frame`, `update_joints`, `update_force`, `set_battery`,
 
 ## Network and sibling checkout
 
-The adapter does not talk to the network. The caller reads commands from
+The adapter itself does not talk to the network. The caller reads commands from
 tpt-teleop and calls `Adapter::tick` at 1 kHz.
+
+The transport in [`src/transport.rs`](src/transport.rs) is separate from the
+adapter. It runs on two sockets, one for commands and one for telemetry, and it
+uses `tpt-t-link` for framing and `tpt-t-sec` for the handshake and sealing:
+
+- The operator (`Operator`) connects to the arm (`Arm`). Each path has its own
+  signed handshake on its own socket. The operator accepts only the enrolled arm
+  it expects.
+- The arm accepts only enrolled operators with a role that may command it
+  (`Operator` or `AiAgent`). A live session cannot be taken over until it has
+  been silent for the takeover window.
+- Every datagram after the handshake is sealed under the session. The arm refuses a
+  command whose sequence number does not rise, and the operator refuses telemetry
+  the same way.
+- `Arm::recv_command` returns a `ControlCommand`, which the caller passes to
+  `Adapter::on_control_command`. `Operator::recv_feed` returns a `Feed`.
+- `Adapter::on_autonomous_motion` is the entry point for displacements the AI
+  session has accepted. Only the surgeon's commands travel through `Arm::recv_command`.
 
 This crate depends on the tpt-teleop core by a relative path:
 
@@ -67,8 +87,15 @@ The integration tests in `tests/adapter.rs` drive the adapter through
 
 ## Limitations
 
-- No real two-site transport or measured WAN latency. Both paths take delays from the caller, and the tests use the simulator's delay link.
-- The link to the surgeon is provided by tpt-teleop. Latency is not measured here.
+- The transport runs over loopback in the tests. It has not been measured over a WAN.
+- One-way latency assumes both units share a disciplined clock (PTP or GPS). The
+  link monitors treat a clock fault as a lost link, but nothing here checks the clock
+  itself.
+- Video and point-cloud frames are not carried yet. Telemetry is a fixed set of eight
+  values.
+- Keys are not rotated. A session lasts until the operator goes quiet and another
+  takes over.
+- AI proposals are not sent over the network. Only surgeon commands are.
 
 ## Dependencies
 

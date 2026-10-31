@@ -14,6 +14,8 @@ categories = ["science::robotics"]
 [dependencies]
 tpt-t-core = { path = "../../../tpt-teleop/crates/tpt-t-core" }
 tpt-t-domain-bridge = { path = "../../../tpt-teleop/crates/tpt-t-domain-bridge" }
+tpt-t-link = { path = "../../../tpt-teleop/crates/tpt-t-link" }
+tpt-t-sec = { path = "../../../tpt-teleop/crates/tpt-t-sec" }
 tpt-t-medical-edge = { path = "../tpt-t-medical-edge" }
 tpt-t-medical-safety = { path = "../tpt-t-medical-safety" }
 tpt-t-medical-surgical = { path = "../tpt-t-medical-surgical" }
